@@ -534,6 +534,7 @@ a { color: inherit; text-decoration: none; }
 .t-tag.red   { color: var(--red-bright);   border: 1px solid rgba(211,32,17,.45);  background: rgba(211,32,17,.08); }
 .t-tag.green { color: var(--green-bright); border: 1px solid rgba(0,154,73,.45);   background: rgba(0,154,73,.08); }
 .t-card p { color: var(--muted); font-size: .93rem; }
+.t-card p b { color: var(--text); font-weight: 600; }
 
 /* ---------- Contact ---------- */
 .contact { text-align: center; }
@@ -605,6 +606,13 @@ a { color: inherit; text-decoration: none; }
   .about-facts { grid-template-columns: 1fr; }
   .hero-actions .btn { width: 100%; justify-content: center; }
   .footer-inner { justify-content: center; text-align: center; }
+}
+
+@media (max-width: 640px) {
+  /* let long terminal output wrap instead of clipping on small screens */
+  .term-body .ln { white-space: normal; }
+  .term.play .ln { animation: none; width: 100%; }
+  .term.play .ln:last-child::after { animation: none; opacity: 1; }
 }
 
 /* ---------- Reduced motion ---------- */
