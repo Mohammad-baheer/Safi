@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mohammad Baheer Safi — Cybersecurity · Software · AI</title>
   <meta name="description" content="Personal portfolio of Mohammad Baheer Safi — a 17-year-old developer from Afghanistan passionate about cybersecurity, software engineering and artificial intelligence." />
+  <meta name="theme-color" content="#070708" />
 
   <!-- Favicon: the Afghan tricolor -->
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"><rect width="10" height="30" fill="%23141416"/><rect x="10" width="10" height="30" fill="%23d32011"/><rect x="20" width="10" height="30" fill="%23009a49"/></svg>' />
@@ -15,9 +17,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
-  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  <noscript>
+    <style>
+      .reveal{opacity:1 !important;transform:none !important}
+      #preloader{display:none !important}
+      .hero-title .line > span{transform:none !important}
+      .flag-bar i{width:64px !important}
+      .split .wi{transform:none !important}
+      .cursor-dot,.cursor-ring{display:none !important}
+    </style>
+  </noscript>
 </head>
 <body>
+
+  <!-- ============ PRELOADER ============ -->
+  <div id="preloader" aria-hidden="true">
+    <div class="pre-inner">
+      <span class="pre-logo">MBS</span>
+      <div class="pre-bar"><i></i></div>
+      <span class="pre-count">000</span>
+    </div>
+  </div>
+
+  <!-- Custom cursor (desktop only) -->
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
 
   <!-- Scroll progress (tricolor) -->
   <div class="progress" id="progress" aria-hidden="true"></div>
@@ -48,9 +72,11 @@
     <!-- ============ HERO ============ -->
     <section class="hero" id="home">
       <div class="hero-bg" aria-hidden="true"></div>
+      <div class="orb orb-red" aria-hidden="true"></div>
+      <div class="orb orb-green" aria-hidden="true"></div>
 
       <div class="container hero-inner">
-        <p class="eyebrow reveal"><span class="pulse" aria-hidden="true"></span> 17 years old &nbsp;·&nbsp; Afghanistan &nbsp;·&nbsp; Open to opportunities</p>
+        <p class="eyebrow reveal" data-scramble><span class="pulse" aria-hidden="true"></span> 17 years old &nbsp;·&nbsp; Afghanistan &nbsp;·&nbsp; Open to opportunities</p>
 
         <h1 class="hero-title">
           <span class="line"><span>Mohammad</span></span>
@@ -68,8 +94,8 @@
         </p>
 
         <div class="hero-actions reveal">
-          <a href="#contact" class="btn btn-red">Get in touch <span aria-hidden="true">→</span></a>
-          <a href="#skills" class="btn btn-ghost">Explore my skills</a>
+          <a href="#contact" class="btn btn-red magnet">Get in touch <span aria-hidden="true">→</span></a>
+          <a href="#skills" class="btn btn-ghost magnet">Explore my skills</a>
         </div>
       </div>
 
@@ -87,10 +113,20 @@
       </div>
     </div>
 
+    <!-- ============ STATS ============ -->
+    <div class="stats-band">
+      <div class="container stats reveal">
+        <div class="stat"><b data-count="17">0</b><span>Years old</span></div>
+        <div class="stat"><b data-count="4">0</b><span>Certifications</span></div>
+        <div class="stat"><b data-count="4">0</b><span>Prog. languages</span></div>
+        <div class="stat"><b data-count="3">0</b><span>Focus domains</span></div>
+      </div>
+    </div>
+
     <!-- ============ ABOUT ============ -->
     <section class="section" id="about" data-word="ABOUT">
       <div class="container">
-        <p class="section-label reveal"><span>01</span> About me</p>
+        <p class="section-label reveal" data-scramble><span>01</span> About me</p>
 
         <div class="about-grid">
           <!-- Monogram card -->
@@ -104,7 +140,7 @@
 
           <!-- Text -->
           <div class="about-text">
-            <h2 class="reveal">A young mind from <span class="hl-red">Afghanistan</span>, engineering the <span class="hl-green">future</span> — one line of code at a time.</h2>
+            <h2 class="split">A young mind from <span class="hl-red">Afghanistan</span>, engineering the <span class="hl-green">future</span> — one line of code at a time.</h2>
             <p class="reveal" data-delay="80">
               I'm <b>Mohammad Baheer Safi</b>, 17 years old, currently in 11th grade at
               <b>Afghanistan-Turkey Schools</b>. My curiosity began with understanding how things
@@ -134,12 +170,12 @@
     <!-- ============ SKILLS ============ -->
     <section class="section" id="skills" data-word="SKILLS">
       <div class="container">
-        <p class="section-label reveal"><span>02</span> Expertise</p>
-        <h2 class="section-title reveal">Three worlds. <em>One mindset.</em></h2>
+        <p class="section-label reveal" data-scramble><span>02</span> Expertise</p>
+        <h2 class="section-title split">Three worlds. <em>One mindset.</em></h2>
 
         <div class="skills-grid">
           <!-- Cybersecurity -->
-          <article class="skill-card reveal tilt">
+          <article class="skill-card spot reveal tilt">
             <div class="ico r" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5.5v5.1c0 5 3.4 9.4 8 10.9 4.6-1.5 8-5.9 8-10.9V5.5L12 2Z"/><path d="m9 12 2 2 4-4.5"/></svg>
             </div>
@@ -149,7 +185,7 @@
           </article>
 
           <!-- Software Engineering -->
-          <article class="skill-card reveal tilt" data-delay="100">
+          <article class="skill-card spot reveal tilt" data-delay="100">
             <div class="ico w" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-5 6 5 6"/><path d="m16 6 5 6-5 6"/><path d="m13.5 4-3 16"/></svg>
             </div>
@@ -159,7 +195,7 @@
           </article>
 
           <!-- AI -->
-          <article class="skill-card reveal tilt" data-delay="200">
+          <article class="skill-card spot reveal tilt" data-delay="200">
             <div class="ico g" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M19.1 4.9l-2.9 2.9M7.8 16.2l-2.9 2.9"/></svg>
             </div>
@@ -203,45 +239,45 @@
     <!-- ============ JOURNEY ============ -->
     <section class="section" id="journey" data-word="JOURNEY">
       <div class="container">
-        <p class="section-label reveal"><span>03</span> Certificates &amp; Education</p>
-        <h2 class="section-title reveal">The journey <em>so far.</em></h2>
+        <p class="section-label reveal" data-scramble><span>03</span> Certificates &amp; Education</p>
+        <h2 class="section-title split">The journey <em>so far.</em></h2>
 
         <div class="timeline">
-          <article class="t-item reveal">
+          <article class="t-item reveal" style="--i:0">
             <span class="t-dot g" aria-hidden="true"></span>
-            <div class="t-card">
+            <div class="t-card spot">
               <div class="t-head"><h3>Afghanistan-Turkey Schools</h3><span class="t-tag green">Education · Present</span></div>
               <p>11th grade student — balancing a serious academic schedule with self-driven study in technology every single day.</p>
             </div>
           </article>
 
-          <article class="t-item reveal" data-delay="80">
+          <article class="t-item reveal" style="--i:1" data-delay="60">
             <span class="t-dot r" aria-hidden="true"></span>
-            <div class="t-card">
+            <div class="t-card spot">
               <div class="t-head"><h3>GSDC — Global Skill Development Council</h3><span class="t-tag red">Certificate</span></div>
               <p><b>Certified Full Stack Developer</b> — professional certification covering front-end, back-end and complete application development.</p>
             </div>
           </article>
 
-          <article class="t-item reveal" data-delay="160">
+          <article class="t-item reveal" style="--i:2" data-delay="60">
             <span class="t-dot r" aria-hidden="true"></span>
-            <div class="t-card">
+            <div class="t-card spot">
               <div class="t-head"><h3>GSDC — Global Skill Development Council</h3><span class="t-tag red">Certificate</span></div>
               <p><b>Certified Artificial Intelligence Foundation</b> — certified foundations of artificial intelligence: core ML concepts and intelligent systems.</p>
             </div>
           </article>
 
-          <article class="t-item reveal" data-delay="240">
+          <article class="t-item reveal" style="--i:3" data-delay="60">
             <span class="t-dot r" aria-hidden="true"></span>
-            <div class="t-card">
+            <div class="t-card spot">
               <div class="t-head"><h3>NVIDIA</h3><span class="t-tag red">Certificate</span></div>
               <p>Certified training from NVIDIA — building strong foundations in modern AI and accelerated computing.</p>
             </div>
           </article>
 
-          <article class="t-item reveal" data-delay="320">
+          <article class="t-item reveal" style="--i:4" data-delay="60">
             <span class="t-dot r" aria-hidden="true"></span>
-            <div class="t-card">
+            <div class="t-card spot">
               <div class="t-head"><h3>Full-Stack App Development Camp</h3><span class="t-tag red">Certificate</span></div>
               <p>Hands-on camp covering front-end, back-end and deployment — building and shipping complete applications end to end.</p>
             </div>
@@ -252,16 +288,19 @@
 
     <!-- ============ CONTACT ============ -->
     <section class="section contact" id="contact" data-word="CONTACT">
+      <div class="orb orb-red orb-contact-a" aria-hidden="true"></div>
+      <div class="orb orb-green orb-contact-b" aria-hidden="true"></div>
+
       <div class="container center">
-        <p class="section-label reveal" style="justify-content:center"><span>04</span> Contact</p>
-        <h2 class="contact-title reveal">Have an idea, an opportunity,<br />or just want to talk <em>tech?</em></h2>
+        <p class="section-label reveal" data-scramble style="justify-content:center"><span>04</span> Contact</p>
+        <h2 class="contact-title split">Have an idea, an opportunity,<br />or just want to talk <em>tech?</em></h2>
         <p class="contact-sub reveal" data-delay="80">Based in Afghanistan — available worldwide, remotely.</p>
         <div class="reveal" data-delay="160">
-          <a class="btn btn-red big" href="mailto:safimohammadbaheer@gmail.com">Say hello <span aria-hidden="true">→</span></a>
+          <a class="btn btn-red big magnet" href="mailto:safimohammadbaheer@gmail.com">Say hello <span aria-hidden="true">→</span></a>
         </div>
 
         <div class="socials reveal" data-delay="240">
-          <a href="mailto:safimohammadbaheer@gmail.com" aria-label="Email" title="safimohammadbaheer@gmail.com">
+          <a class="magnet" href="mailto:safimohammadbaheer@gmail.com" aria-label="Email" title="safimohammadbaheer@gmail.com">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 7 9 6 9-6"/></svg>
           </a>
         </div>
