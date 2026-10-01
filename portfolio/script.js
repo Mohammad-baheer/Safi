@@ -1,9 +1,10 @@
 /* ============================================================
-   MOHAMMAD BAHEER SAFI — PORTFOLIO · script.js  (V2)
-   Preloader · split-text · scramble · counters · custom cursor
-   magnetic buttons · spotlight cards · tilt · parallax · nav
-   All heavy effects are gated: touch devices & reduced-motion
-   get a clean, fast, fully functional experience.
+   MOHAMMAD BAHEER SAFI — PORTFOLIO · script.js  (V4 — LIVING SITE)
+   preloader · split-text · scramble · counters · custom cursor
+   magnetic · spotlight · tilt · parallax · auto-hide nav
+   V4: particle constellation · curtain transitions · sparks
+   ripples · letter-hover · nav label flip · terminal loop
+   Touch devices & reduced-motion get a clean, fast fallback.
    ============================================================ */
 
 (() => {
@@ -39,8 +40,8 @@
       preBar.style.transform = `scaleX(${p})`;
       if (p < 1) { requestAnimationFrame(count); return; }
       setTimeout(() => {
-        pre.classList.add('done');   // curtain lifts
-        releaseHero();               // hero animations fire
+        pre.classList.add('done');
+        releaseHero();
         setTimeout(() => pre.remove(), 1200);
       }, 220);
     };
@@ -54,7 +55,7 @@
     let i = 0;
     (function walk(node) {
       [...node.childNodes].forEach(child => {
-        if (child.nodeType === 3) {                       // text node
+        if (child.nodeType === 3) {
           const frag = document.createDocumentFragment();
           child.textContent.split(/(\s+)/).forEach(part => {
             if (!part) return;
@@ -68,7 +69,7 @@
           });
           node.replaceChild(frag, child);
         } else if (child.nodeType === 1 && child.tagName !== 'BR') {
-          walk(child);                                    // into <em>, <span>…
+          walk(child);
         }
       });
     })(el);
@@ -163,7 +164,6 @@
     progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
     nav.classList.toggle('scrolled', y > 40);
 
-    /* hide nav scrolling down, show scrolling up */
     if (!menuOpen()) {
       if (y > lastY + 6 && y > 340) nav.classList.add('hide');
       else if (y < lastY - 6) nav.classList.remove('hide');
@@ -180,20 +180,40 @@
   onScroll();
 
   /* ============================================================
-     7) REVEAL OBSERVER — reveals, terminal, split, scramble, stats
+     7) REVEAL OBSERVER — reveals, terminal loop, scramble, stats
      ============================================================ */
+  function loopTerm(term) {
+    term.classList.remove('play');
+    void term.offsetWidth;                 // restart CSS animations
+    term.classList.add('play');
+    setTimeout(() => loopTerm(term), 12500);
+  }
+
   const io = new IntersectionObserver(entries => {
     entries.forEach(en => {
       if (!en.isIntersecting) return;
       const el = en.target;
       if (el.dataset.delay) el.style.transitionDelay = `${el.dataset.delay}ms`;
       el.classList.add('visible');
-      if (el.classList.contains('term'))  el.classList.add('play');
+      if (el.classList.contains('term')) {
+        el.classList.add('play');
+        if (!reduced) setTimeout(() => loopTerm(el), 12500);
+      }
       if (el.hasAttribute('data-scramble') && !reduced) scramble(el);
       if (el.classList.contains('stats')) $$('b[data-count]', el).forEach(countUp);
       io.unobserve(el);
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  /* multi-direction reveal variants */
+  [
+    ['.monogram-card',   'fx-left'],
+    ['.about-text .reveal', 'fx-right'],
+    ['.skill-card',      'fx-zoom'],
+    ['.term',            'fx-zoom'],
+    ['.t-item',          'fx-right'],
+    ['.contact .reveal', 'fx-zoom'],
+  ].forEach(([sel, cls]) => $$(sel).forEach(el => el.classList.add(cls)));
 
   $$('.reveal, .term, .split, .stats').forEach(el => io.observe(el));
 
@@ -231,7 +251,199 @@
   }
 
   /* ============================================================
-     10) DESKTOP-ONLY MAGIC — cursor, magnet, spotlight, tilt, glow
+     10) V4 — PER-LETTER HERO NAME (touch me!)
+     ============================================================ */
+  if (!reduced) {
+    let ci2 = 0;
+    $$('.hero-title .line > span').forEach(line => {
+      const rebuild = (parent) => {
+        [...parent.childNodes].forEach(node => {
+          if (node.nodeType === 3) {
+            const frag = document.createDocumentFragment();
+            [...node.textContent].forEach(ch => {
+              if (ch === ' ') { frag.append(' '); return; }
+              const s = document.createElement('span');
+              s.className = 'ch';
+              s.textContent = ch;
+              s.style.setProperty('--hc', (ci2++ % 2) ? 'var(--green-bright)' : 'var(--red-bright)');
+              frag.append(s);
+            });
+            parent.replaceChild(frag, node);
+          } else if (node.nodeType === 1) {
+            rebuild(node);                       // into <em>
+          }
+        });
+      };
+      rebuild(line);
+    });
+  }
+
+  /* ============================================================
+     11) V4 — NAV LABEL FLIP (two-layer labels)
+     ============================================================ */
+  $$('#navLinks a:not(.nav-cta)').forEach(a => {
+    const t = a.textContent.trim();
+    a.innerHTML = `<span class="lbl"><span>${t}</span><span aria-hidden="true">${t}</span></span>`;
+  });
+
+  /* ============================================================
+     12) V4 — TRICOLOR CURTAIN PAGE TRANSITIONS
+     ============================================================ */
+  const curtain = $('#curtain');
+  let transitioning = false;
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a || reduced || transitioning || !curtain) return;
+    const id = a.getAttribute('href');
+    const target = id.length > 1 ? document.querySelector(id) : null;
+    if (!target) return;
+
+    e.preventDefault();
+    closeMenu();
+    transitioning = true;
+    curtain.classList.add('in');
+
+    setTimeout(() => {
+      const prev = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = 'auto';
+      target.scrollIntoView();
+      document.documentElement.style.scrollBehavior = prev;
+      try { history.pushState(null, '', id); } catch (_) {}
+      curtain.classList.add('out');
+      setTimeout(() => {
+        curtain.classList.remove('in', 'out');
+        transitioning = false;
+      }, 800);
+    }, 620);
+  });
+
+  /* ============================================================
+     13) V4 — SPARKS ON EVERY CLICK + RIPPLES ON TOUCHABLES
+     ============================================================ */
+  const SPARK_COLORS = ['#ff5147', '#2fd07d', '#f2f2ef'];
+
+  if (!reduced) {
+    document.addEventListener('pointerdown', (e) => {
+      /* spark burst anywhere */
+      if (document.querySelectorAll('.spark').length < 48) {
+        for (let k = 0; k < 9; k++) {
+          const s = document.createElement('span');
+          s.className = 'spark';
+          const ang  = Math.random() * Math.PI * 2;
+          const dist = 26 + Math.random() * 54;
+          s.style.left = `${e.clientX}px`;
+          s.style.top  = `${e.clientY}px`;
+          s.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+          s.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+          s.style.setProperty('--c', SPARK_COLORS[(Math.random() * 3) | 0]);
+          document.body.append(s);
+          s.addEventListener('animationend', () => s.remove(), { once: true });
+        }
+      }
+      /* ripple inside buttons/chips */
+      const t = e.target.closest('.btn, .chip, .socials a, .nav-cta');
+      if (t) {
+        const r = t.getBoundingClientRect();
+        const size = Math.max(r.width, r.height);
+        const rip = document.createElement('span');
+        rip.className = 'ripple';
+        rip.style.width = rip.style.height = `${size}px`;
+        rip.style.left = `${e.clientX - r.left - size / 2}px`;
+        rip.style.top  = `${e.clientY - r.top  - size / 2}px`;
+        t.append(rip);
+        rip.addEventListener('animationend', () => rip.remove(), { once: true });
+      }
+    }, { passive: true });
+  }
+
+  /* ============================================================
+     14) V4 — LIVING PARTICLE CONSTELLATION BACKGROUND
+     ============================================================ */
+  if (!reduced) {
+    const c = $('#bgCanvas');
+    if (c) {
+      const ctx = c.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const COLORS = ['211,32,17', '0,154,73', '242,242,239'];
+      let W, H, ps = [], run = true;
+      const mouse = { x: -1e4, y: -1e4 };
+
+      const size = () => {
+        W = c.width  = Math.floor(innerWidth  * dpr);
+        H = c.height = Math.floor(innerHeight * dpr);
+        c.style.width  = `${innerWidth}px`;
+        c.style.height = `${innerHeight}px`;
+      };
+      const make = () => {
+        const N = innerWidth < 760 ? 24 : 70;
+        ps = Array.from({ length: N }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - .5) * .35 * dpr,
+          vy: (Math.random() - .5) * .35 * dpr,
+          r: (Math.random() * 1.6 + .6) * dpr,
+          c: COLORS[(Math.random() * 3) | 0],
+        }));
+      };
+      size(); make();
+      addEventListener('resize', () => { size(); make(); }, { passive: true });
+      addEventListener('mousemove', e => { mouse.x = e.clientX * dpr; mouse.y = e.clientY * dpr; }, { passive: true });
+      addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        if (t) { mouse.x = t.clientX * dpr; mouse.y = t.clientY * dpr; }
+      }, { passive: true });
+      document.addEventListener('visibilitychange', () => {
+        run = !document.hidden;
+        if (run) requestAnimationFrame(tick);
+      });
+
+      const LINK = 110 * dpr;
+      function tick() {
+        if (!run) return;
+        ctx.clearRect(0, 0, W, H);
+
+        for (const p of ps) {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) p.x += W; else if (p.x > W) p.x -= W;
+          if (p.y < 0) p.y += H; else if (p.y > H) p.y -= H;
+          const dx = p.x - mouse.x, dy = p.y - mouse.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 130 * dpr && d > .001) { p.x += dx / d * 1.2; p.y += dy / d * 1.2; }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+          ctx.fillStyle = `rgba(${p.c},.55)`;
+          ctx.fill();
+        }
+        ctx.lineWidth = dpr * .6;
+        for (let i = 0; i < ps.length; i++) {
+          for (let j = i + 1; j < ps.length; j++) {
+            const a = ps[i], b = ps[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < LINK * LINK) {
+              ctx.strokeStyle = `rgba(255,255,255,${(.05 * (1 - d2 / (LINK * LINK))).toFixed(3)})`;
+              ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+  }
+
+  /* ============================================================
+     15) V4 — STATS SCRAMPLE ON HOVER (desktop)
+     ============================================================ */
+  if (fine && !reduced) {
+    $$('.stat b').forEach(b => {
+      b.parentElement.addEventListener('mouseenter', () => scramble(b));
+    });
+  }
+
+  /* ============================================================
+     16) DESKTOP-ONLY MAGIC — cursor, magnet, spotlight, tilt, glow
      ============================================================ */
   const glow = $('#cursorGlow');
   const dot  = $('#cursorDot');
@@ -244,7 +456,7 @@
     return;   // touch / reduced-motion: stop here, site is fully functional
   }
 
-  /* --- custom cursor: gradient dot + difference ring --- */
+  /* --- custom cursor: gradient dot + trailing ring --- */
   if (dot && ring) {
     document.documentElement.classList.add('custom-cursor');
     document.body.classList.add('cursor-on');
@@ -259,8 +471,8 @@
     document.documentElement.addEventListener('mouseenter', () => document.body.classList.add('cursor-on'));
 
     (function loop() {
-      dx += (mx - dx) * 0.55; dy += (my - dy) * 0.55;   // dot: fast
-      rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;   // ring: lazy
+      dx += (mx - dx) * 0.55; dy += (my - dy) * 0.55;
+      rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
       dot.style.transform  = `translate3d(${dx}px, ${dy}px, 0) translate(-50%, -50%) scale(var(--s))`;
       ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%) scale(var(--s))`;
       requestAnimationFrame(loop);
@@ -290,7 +502,7 @@
   });
 
   /* --- spotlight border-glow cards --- */
-  $('.spot').forEach(el => {
+  $$('.spot').forEach(el => {
     el.addEventListener('mousemove', e => {
       const r = el.getBoundingClientRect();
       el.style.setProperty('--mx', `${e.clientX - r.left}px`);
