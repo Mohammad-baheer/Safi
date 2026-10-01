@@ -784,3 +784,132 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
 @media (prefers-reduced-motion: reduce) {
   .hero-title .line, body.loaded .hero-title .line { overflow: visible; animation: none; }
 }
+
+/* ============================================================
+   V4 — "LIVING SITE" UPGRADE
+   particle canvas · curtain transitions · sparks · ripples
+   letter hover · glitch · beams · floating · label flip
+   ============================================================ */
+
+/* ---------- Particle constellation canvas ---------- */
+#bgCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+/* keep content surfaces above the particle field */
+.t-item, .scroll-hint { z-index: 2; }
+.footer { position: relative; z-index: 2; }
+
+/* ---------- Tricolor curtain page transition ---------- */
+#curtain { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
+#curtain i {
+  position: absolute; left: 0; right: 0; height: 33.5%;
+  transform: translateY(-102%);
+  transition: transform .45s cubic-bezier(.76, 0, .24, 1);
+}
+#curtain i:nth-child(1) { top: 0;      background: #0a0a0c; }
+#curtain i:nth-child(2) { top: 33.3%;  background: var(--red);   transition-delay: .06s; }
+#curtain i:nth-child(3) { top: 66.6%;  background: var(--green); transition-delay: .12s; }
+#curtain.in i  { transform: translateY(0); }
+#curtain.out i { transform: translateY(102%); transition-delay: 0s; }
+#curtain.out i:nth-child(2) { transition-delay: .05s; }
+#curtain.out i:nth-child(3) { transition-delay: .1s; }
+
+/* ---------- Click sparks ---------- */
+.spark {
+  position: fixed; width: 6px; height: 6px; border-radius: 50%;
+  pointer-events: none; z-index: 1700; background: var(--c);
+  animation: sparkFly .65s cubic-bezier(.2, .8, .3, 1) forwards;
+}
+@keyframes sparkFly {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to   { transform: translate(var(--dx), var(--dy)) scale(.15); opacity: 0; }
+}
+
+/* ---------- Ripples + shine on touchables ---------- */
+.btn, .chip, .socials a, .nav-cta { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,.5), rgba(255,255,255,0) 62%);
+  transform: scale(0); animation: rip .65s ease-out forwards;
+}
+@keyframes rip { to { transform: scale(2.6); opacity: 0; } }
+
+.btn::after, .chip::after, .socials a::after, .nav-cta::after {
+  content: ""; position: absolute; top: -30%; bottom: -30%; width: 40%; left: -70%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, .28), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+  animation: shine 4.2s ease-in-out infinite;
+}
+.chip:nth-child(2)::after { animation-delay: .5s; }
+.chip:nth-child(3)::after { animation-delay: 1s; }
+.chip:nth-child(4)::after { animation-delay: 1.5s; }
+@keyframes shine { 0%, 55% { left: -70%; } 100% { left: 135%; } }
+
+/* ---------- Per-letter hero name (touch me!) ---------- */
+.hero-title .ch {
+  display: inline-block;
+  transition: transform .35s var(--ease), color .3s, -webkit-text-stroke-color .3s;
+}
+.hero-title .ch:hover {
+  transform: translateY(-.14em) rotate(-5deg) scale(1.12);
+  color: var(--hc, var(--red-bright));
+}
+.hero-title em .ch:hover { color: var(--hc, var(--red-bright)); -webkit-text-stroke-color: transparent; }
+
+/* ---------- Periodic cyber-glitch on the name ---------- */
+.hero-title { animation: glitch 9s infinite; }
+@keyframes glitch {
+  0%, 93.8%, 97.2%, 100% { clip-path: none; transform: none; text-shadow: none; }
+  94.2% { clip-path: inset(10% 0 58% 0); transform: translateX(-9px);
+          text-shadow: 3px 0 rgba(211,32,17,.85), -3px 0 rgba(0,154,73,.85); }
+  95.2% { clip-path: inset(58% 0 8% 0); transform: translateX(8px);
+          text-shadow: -3px 0 rgba(211,32,17,.85), 3px 0 rgba(0,154,73,.85); }
+  96.2% { clip-path: inset(28% 0 42% 0); transform: translateX(-5px);
+          text-shadow: 2px 0 rgba(211,32,17,.85), -2px 0 rgba(0,154,73,.85); }
+}
+
+/* ---------- Nav label flip ---------- */
+.nav-links a:not(.nav-cta) .lbl { display: block; height: 1.3em; overflow: hidden; }
+.nav-links a:not(.nav-cta) .lbl span { display: block; transition: transform .35s var(--ease); }
+.nav-links a:not(.nav-cta) .lbl span:nth-child(2) { color: var(--green-bright); }
+.nav-links a:not(.nav-cta):hover .lbl span,
+.nav-links a:not(.nav-cta).active .lbl span { transform: translateY(-100%); }
+
+/* ---------- Flowing border beam on skill cards ---------- */
+.skill-card::before { animation: beam 5.5s var(--ease) infinite; }
+.skill-card:nth-child(2)::before { animation-delay: 1.8s; }
+.skill-card:nth-child(3)::before { animation-delay: 3.6s; }
+@keyframes beam {
+  0%       { transform: scaleX(0); transform-origin: left; }
+  38%      { transform: scaleX(1); transform-origin: left; }
+  50%      { transform: scaleX(1); transform-origin: right; }
+  88%,100% { transform: scaleX(0); transform-origin: right; }
+}
+
+/* ---------- Floating monogram + drifting ghost words ---------- */
+.monogram-ring { animation: floatY 6s ease-in-out infinite alternate; }
+@keyframes floatY { to { transform: translateY(-12px); } }
+
+.section::before { animation: ghostFloat 16s ease-in-out infinite alternate; }
+@keyframes ghostFloat { to { transform: translateY(34px); } }
+
+/* ---------- Scroll hint bounce + logo flag wave ---------- */
+.scroll-hint { animation: hintBounce 2.4s ease-in-out infinite; }
+@keyframes hintBounce { 50% { transform: translateX(-50%) translateY(7px); } }
+.logo:hover .logo-flag { animation: wave .7s var(--ease); }
+@keyframes wave { 25% { transform: skewX(14deg) scaleX(1.15); } 60% { transform: skewX(-9deg); } }
+
+/* ---------- Multi-direction scroll reveals ---------- */
+.reveal.fx-left  { transform: translateX(-48px); }
+.reveal.fx-right { transform: translateX(48px); }
+.reveal.fx-zoom  { transform: scale(.86); }
+.reveal.fx-left.visible, .reveal.fx-right.visible, .reveal.fx-zoom.visible { transform: none; }
+
+/* ---------- V4 reduced-motion kill switch ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #bgCanvas { display: none; }
+  #curtain { display: none; }
+  .hero-title { animation: none; }
+  .skill-card::before { animation: none; transform: scaleX(0); }
+  .monogram-ring, .section::before, .scroll-hint { animation: none; }
+  .btn::after, .chip::after, .socials a::after, .nav-cta::after { animation: none; display: none; }
+  .reveal.fx-left, .reveal.fx-right, .reveal.fx-zoom { transform: none; }
+}
