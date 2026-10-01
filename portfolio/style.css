@@ -798,7 +798,9 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
 .footer { position: relative; z-index: 2; }
 
 /* ---------- Tricolor curtain page transition ---------- */
-#curtain { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
+#curtain { position: fixed; inset: 0; z-index: 1600; pointer-events: none; visibility: hidden; }
+#curtain.in, #curtain.out { visibility: visible; }
+#curtain.noanim i { transition: none !important; }
 #curtain i {
   position: absolute; left: 0; right: 0; height: 33.5%;
   transform: translateY(-102%);
