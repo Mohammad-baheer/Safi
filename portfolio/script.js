@@ -304,6 +304,16 @@
     transitioning = true;
     curtain.classList.add('in');
 
+    /* failsafe watchdog: curtain can never stay stuck on screen */
+    setTimeout(() => {
+      if (!transitioning) return;
+      curtain.classList.add('noanim');
+      curtain.classList.remove('in', 'out');
+      void curtain.offsetWidth;
+      curtain.classList.remove('noanim');
+      transitioning = false;
+    }, 2600);
+
     setTimeout(() => {
       const prev = document.documentElement.style.scrollBehavior;
       document.documentElement.style.scrollBehavior = 'auto';
@@ -312,7 +322,11 @@
       try { history.pushState(null, '', id); } catch (_) {}
       curtain.classList.add('out');
       setTimeout(() => {
+        /* reset instantly & invisibly — panels must NOT sweep back */
+        curtain.classList.add('noanim');
         curtain.classList.remove('in', 'out');
+        void curtain.offsetWidth;
+        curtain.classList.remove('noanim');
         transitioning = false;
       }, 800);
     }, 620);
