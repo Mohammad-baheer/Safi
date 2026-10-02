@@ -968,3 +968,13 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
   border-bottom-color: transparent !important;
   box-shadow: none !important;
 }
+
+/* ============================================================
+   V7 — NO TRANSITION TRAP
+   While .menu-open, the nav must not animate transform /
+   backdrop-filter at all — an in-flight value on either one is
+   still a containing block and re-traps the fixed overlay for
+   the whole transition (the "broken for a moment, then snaps"
+   flicker). Snap instead: the opaque overlay hides the snap.
+   ============================================================ */
+.nav.menu-open { transition: none !important; }
