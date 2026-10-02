@@ -138,7 +138,11 @@
     hamburger.classList.remove('open');
     hamburger.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('no-scroll');
-    nav.classList.remove('menu-open');
+    /* keep the nav "flat" until the overlay finished fading out,
+       otherwise the returning blur/transform re-traps it mid-fade */
+    setTimeout(() => {
+      if (!navLinks.classList.contains('open')) nav.classList.remove('menu-open');
+    }, 380);
   }
 
   hamburger.addEventListener('click', () => {
