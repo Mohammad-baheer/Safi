@@ -138,6 +138,7 @@
     hamburger.classList.remove('open');
     hamburger.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('no-scroll');
+    nav.classList.remove('menu-open');
   }
 
   hamburger.addEventListener('click', () => {
@@ -145,6 +146,9 @@
     hamburger.classList.toggle('open', open);
     hamburger.setAttribute('aria-expanded', String(open));
     document.body.classList.toggle('no-scroll', open);
+    /* backdrop-filter/transform on the nav would trap the fixed
+       overlay inside it (containing-block rule) — keep nav clean */
+    nav.classList.toggle('menu-open', open);
     if (open) nav.classList.remove('hide');
   });
   $$('#navLinks a').forEach(a => a.addEventListener('click', closeMenu));
