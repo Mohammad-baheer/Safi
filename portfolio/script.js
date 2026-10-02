@@ -328,8 +328,8 @@
         void curtain.offsetWidth;
         curtain.classList.remove('noanim');
         transitioning = false;
-      }, 800);
-    }, 620);
+      }, 1100);
+    }, 560);
   });
 
   /* ============================================================
@@ -415,6 +415,9 @@
       const LINK = 110 * dpr;
       function tick() {
         if (!run) return;
+        /* freeze the particle field while the curtain transitions —
+           gives the GPU 100% of its budget to the wipe (mobile silk) */
+        if (transitioning) { requestAnimationFrame(tick); return; }
         ctx.clearRect(0, 0, W, H);
 
         for (const p of ps) {
