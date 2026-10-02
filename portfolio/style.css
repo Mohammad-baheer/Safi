@@ -953,3 +953,18 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
   .nav-links a:not(.nav-cta) { font-size: 1.7rem; }
   .nav-links a:not(.nav-cta) .lbl { height: 1.25em; }
 }
+
+/* ============================================================
+   V6 — MENU CONTAINING-BLOCK FIX
+   backdrop-filter / transform on .nav turn it into the containing
+   block for the fixed overlay → menu trapped in the 74px bar.
+   While the menu is open the nav must be fully "flat".
+   ============================================================ */
+.nav.menu-open {
+  transform: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
