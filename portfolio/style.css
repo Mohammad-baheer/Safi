@@ -915,3 +915,41 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
   .btn::after, .chip::after, .socials a::after, .nav-cta::after { animation: none; display: none; }
   .reveal.fx-left, .reveal.fx-right, .reveal.fx-zoom { transform: none; }
 }
+
+/* ============================================================
+   V5 — SILKY CURTAIN + UNBREAKABLE MOBILE MENU
+   ============================================================ */
+
+/* Curtain: GPU layers + accelerating exit (no lazy tail) */
+#curtain i { will-change: transform; }
+#curtain.out i { transition: transform .38s cubic-bezier(.42, 0, 1, 1); }
+
+/* Mobile menu: forced full-screen opaque overlay, centered column */
+@media (max-width: 760px) {
+  .nav-links {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    height: 100% !important;
+    z-index: 105;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 28px !important;
+    padding: 90px 24px 50px !important;
+    background: #08080a !important;
+    background: rgba(8, 8, 10, .985) !important;
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s ease, visibility 0s linear .3s;
+  }
+  .nav-links.open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: opacity .3s ease;
+  }
+  .nav-links a:not(.nav-cta) { font-size: 1.7rem; }
+  .nav-links a:not(.nav-cta) .lbl { height: 1.25em; }
+}
