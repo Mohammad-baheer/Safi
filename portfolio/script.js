@@ -303,7 +303,6 @@
   const spidey  = $('#spidey');
   const webLine = $('#webLine');
   const webP    = $('#webLineL');
-  const bubble  = $('#spideyBubble');
   let transitioning = false;          // freezes particles during auto-scroll
   let autoScroll = null;
   let curPose = 'hang';
@@ -347,7 +346,7 @@
     if (Math.abs(dist) < 10) return;
     autoScroll = {
       t0: performance.now(), startY, dist,
-      dur: Math.min(2600, Math.max(700, Math.abs(dist) / 1.5)),
+      dur: Math.min(1000, Math.max(380, Math.abs(dist) / 4)),
       dir: Math.sign(dist),
     };
     transitioning = true;
@@ -361,7 +360,7 @@
         autoScroll = null; transitioning = false;
         pose('hang');
         idleSince = performance.now();
-        nextAct = idleSince + 1800 + Math.random() * 2500;
+        nextAct = idleSince + 1200 + Math.random() * 2000;
       }
     })(performance.now());
   }
@@ -370,25 +369,18 @@
     addEventListener(ev, () => { if (autoScroll) { autoScroll = null; transitioning = false; } }, { passive: true }));
 
   /* ---- idle life ---- */
-  function say(txt, ms = 1500) {
-    if (!bubble) return;
-    bubble.textContent = txt;
-    spidey.classList.add('talking');
-    setTimeout(() => spidey.classList.remove('talking'), ms);
-  }
   function idleAction() {
     const acts = ['wave', 'flex', 'eat', 'look'];
     const a = acts[(Math.random() * acts.length) | 0];
-    const still = () => !autoScroll && Math.abs(sVel) < 0.6;
+    const still = () => !autoScroll && Math.abs(sVel) < 0.35;
     if (a === 'eat') {
       pose('eat'); spidey.classList.add('eating');
       setTimeout(() => { spidey.classList.remove('eating'); if (still()) pose('hang'); }, 2400);
     } else {
       pose(a);
-      if (a === 'wave' && Math.random() < .5) say('hey! 🕷️', 1200);
       setTimeout(() => { if (still()) pose('hang'); }, a === 'flex' ? 1500 : a === 'wave' ? 1400 : 1200);
     }
-    nextAct = performance.now() + 3200 + Math.random() * 4800;
+    nextAct = performance.now() + 2200 + Math.random() * 3000;
   }
 
   /* ---- render loop: spring lag, thread physics, pose machine ---- */
@@ -398,27 +390,32 @@
       requestAnimationFrame(spideyLoop);
       return;
     }
-    const targetOff = Math.max(-110, Math.min(110, -sVel * 55));
-    off += (targetOff - off) * 0.14;
-    const targetRot = Math.max(-14, Math.min(14, sVel * 7));
-    rot += (targetRot - rot) * 0.12;
+    const t = performance.now();
+    const targetOff = Math.max(-130, Math.min(130, -sVel * 70));
+    off += (targetOff - off) * 0.26;
+    const targetRot = Math.max(-16, Math.min(16, sVel * 9));
+    rot += (targetRot - rot) * 0.2;
     sVel *= 0.9;
 
-    const x = baseX, y = baseY + off;
-    spidey.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg)`;
+    /* never frozen: layered sine micro-jitter = alive */
+    const jx = Math.sin(t / 610) * 1.6 + Math.sin(t / 247) * 0.8;
+    const jy = Math.sin(t / 530) * 2.2 + Math.sin(t / 313) * 1.0;
+    const jr = Math.sin(t / 700) * 1.6;
+    const x = baseX + jx, y = baseY + off + jy;
+    spidey.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot + jr}deg)`;
 
     const hx = x - 6, hy = y - handUp() + 6;
-    const sag = Math.max(-70, Math.min(70, sVel * 40)) + Math.sin(performance.now() / 900) * 4;
+    const sag = Math.max(-70, Math.min(70, sVel * 40)) + Math.sin(t / 500) * 5;
     webP.setAttribute('d', `M ${hx + 4} -6 Q ${hx + 4 + sag} ${hy / 2}, ${hx} ${hy}`);
 
     if (!autoScroll) {
-      if (Math.abs(sVel) > 0.6) {
+      if (Math.abs(sVel) > 0.35) {
         const p = sVel > 0 ? 'rappel' : 'climb';
         if (curPose !== p) pose(p);
       } else if (curPose === 'rappel' || curPose === 'climb') {
         pose('hang');
         idleSince = performance.now();
-        nextAct = idleSince + 2200 + Math.random() * 3800;
+        nextAct = idleSince + 1600 + Math.random() * 2600;
       } else if (curPose === 'hang' && idleSince && performance.now() > nextAct && !reduced) {
         idleAction();
       }
@@ -434,16 +431,15 @@
     off = -innerHeight * 0.9;
     pose('rappel');
     setTimeout(() => {
-      if (autoScroll || Math.abs(sVel) > 0.6) return;
+      if (autoScroll || Math.abs(sVel) > 0.35) return;
       pose('wave');
-      say('hi! 👋', 1700);
       setTimeout(() => {
-        if (autoScroll || Math.abs(sVel) > 0.6) return;
+        if (autoScroll || Math.abs(sVel) > 0.35) return;
         pose('hang');
         idleSince = performance.now();
-        nextAct = idleSince + 2600;
-      }, 1800);
-    }, 1000);
+        nextAct = idleSince + 2000;
+      }, 1500);
+    }, 800);
   }
 
   if (spidey) {
@@ -462,8 +458,6 @@
     spidey.addEventListener('click', () => {
       if (spidey.classList.contains('flipping')) return;
       spidey.classList.add('flipping');
-      const lines = ['my web! 💪', 'thwip! 🕸️', 'watch the scroll! ⬇️'];
-      say(lines[(Math.random() * lines.length) | 0], 1300);
       for (let k = 0; k < 14; k++) {
         const s = document.createElement('span');
         s.className = 'spark';
