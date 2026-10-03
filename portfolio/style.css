@@ -1087,3 +1087,149 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
   #webSplat, #webLine { display: none; }
   #spidey svg { transform: none !important; }
 }
+
+/* ============================================================
+   V9 — SPIDEY v2: LIVING SCROLL-COMPANION
+   rappel with scroll · auto-scroll at his speed · blinking ·
+   idle life (wave / flex / eat / look) · 3D-shaded rig
+   ============================================================ */
+
+#spidey { position: fixed; }
+#spidey .mask  { fill: url(#maskG); }
+#spidey .torso { stroke: url(#torsoG); }
+#spidey line   { stroke: url(#limbG); }
+#spidey .webline { stroke: rgba(0, 0, 0, .38); }
+
+/* ---- blinking eyes (always alive) ---- */
+#spidey .eye {
+  transform-box: fill-box; transform-origin: center;
+  animation: blink 4.6s infinite;
+}
+@keyframes blink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.08); } }
+
+/* ---- gentle sway while hanging ---- */
+#spidey .sway { transform-box: view-box; }
+#spidey[data-pose="hang"] .sway,
+#spidey[data-pose="wave"] .sway,
+#spidey[data-pose="flex"] .sway,
+#spidey[data-pose="eat"]  .sway,
+#spidey[data-pose="look"] .sway { animation: sway 5.2s ease-in-out infinite alternate; }
+@keyframes sway { from { transform: rotate(-2.4deg); } to { transform: rotate(2.4deg); } }
+
+/* ---- POSE: hang (default, gripping the thread) ---- */
+#spidey[data-pose="hang"] .armL { transform: rotate(-152deg); }
+#spidey[data-pose="hang"] .armL .fore { transform: rotate(-6deg); }
+#spidey[data-pose="hang"] .armR { transform: rotate(10deg); }
+#spidey[data-pose="hang"] .armR .fore { transform: rotate(14deg); }
+#spidey[data-pose="hang"] .legL { transform: rotate(8deg); }
+#spidey[data-pose="hang"] .legL .fore { transform: rotate(12deg); }
+#spidey[data-pose="hang"] .legR { transform: rotate(-6deg); }
+#spidey[data-pose="hang"] .legR .fore { transform: rotate(-12deg); }
+
+/* ---- POSE: rappel (descending with the scroll) ---- */
+#spidey[data-pose="rappel"] svg { transform: rotate(5deg); }
+#spidey[data-pose="rappel"] .armL { transform: rotate(-152deg); }
+#spidey[data-pose="rappel"] .armL .fore { transform: rotate(-6deg); }
+#spidey[data-pose="rappel"] .armR { transform: rotate(46deg); }
+#spidey[data-pose="rappel"] .armR .fore { transform: rotate(52deg); }
+#spidey[data-pose="rappel"] .legL { transform: rotate(40deg); }
+#spidey[data-pose="rappel"] .legL .fore { transform: rotate(44deg); }
+#spidey[data-pose="rappel"] .legR { transform: rotate(56deg); }
+#spidey[data-pose="rappel"] .legR .fore { transform: rotate(58deg); }
+
+/* ---- POSE: climb (ascending) ---- */
+#spidey[data-pose="climb"] svg { transform: rotate(-4deg); }
+#spidey[data-pose="climb"] .armL { transform: rotate(-152deg); }
+#spidey[data-pose="climb"] .armL .fore { transform: rotate(-6deg); }
+#spidey[data-pose="climb"] .armR { transform: rotate(-138deg); }
+#spidey[data-pose="climb"] .armR .fore { transform: rotate(-10deg); }
+#spidey[data-pose="climb"] .legL { transform: rotate(26deg); }
+#spidey[data-pose="climb"] .legL .fore { transform: rotate(74deg); }
+#spidey[data-pose="climb"] .legR { transform: rotate(40deg); }
+#spidey[data-pose="climb"] .legR .fore { transform: rotate(82deg); }
+
+/* ---- POSE: wave (greeting) ---- */
+#spidey[data-pose="wave"] .armL { transform: rotate(-140deg); }
+#spidey[data-pose="wave"] .armL .fore { animation: waveHand .4s ease-in-out infinite alternate; }
+#spidey[data-pose="wave"] .armR { transform: rotate(10deg); }
+#spidey[data-pose="wave"] .armR .fore { transform: rotate(14deg); }
+#spidey[data-pose="wave"] .legL { transform: rotate(8deg); }
+#spidey[data-pose="wave"] .legL .fore { transform: rotate(12deg); }
+#spidey[data-pose="wave"] .legR { transform: rotate(-6deg); }
+#spidey[data-pose="wave"] .legR .fore { transform: rotate(-12deg); }
+
+/* ---- POSE: flex (muscles 💪) ---- */
+#spidey[data-pose="flex"] .armL { transform: rotate(-64deg); }
+#spidey[data-pose="flex"] .armL .fore { transform: rotate(-108deg); }
+#spidey[data-pose="flex"] .armR { transform: rotate(64deg); }
+#spidey[data-pose="flex"] .armR .fore { transform: rotate(108deg); }
+#spidey[data-pose="flex"] .legL { transform: rotate(8deg); }
+#spidey[data-pose="flex"] .legL .fore { transform: rotate(12deg); }
+#spidey[data-pose="flex"] .legR { transform: rotate(-6deg); }
+#spidey[data-pose="flex"] .legR .fore { transform: rotate(-12deg); }
+#spidey[data-pose="flex"] .rig { animation: flexPulse .45s ease-in-out 2; }
+@keyframes flexPulse { 50% { transform: scale(1.07); } }
+
+/* ---- POSE: eat (snack time 🪰) ---- */
+#spidey[data-pose="eat"] .armL { transform: rotate(-96deg); }
+#spidey[data-pose="eat"] .armL .fore { transform: rotate(-42deg); }
+#spidey[data-pose="eat"] .armR { transform: rotate(10deg); }
+#spidey[data-pose="eat"] .armR .fore { transform: rotate(14deg); }
+#spidey[data-pose="eat"] .legL { transform: rotate(10deg); }
+#spidey[data-pose="eat"] .legL .fore { transform: rotate(16deg); }
+#spidey[data-pose="eat"] .legR { transform: rotate(-8deg); }
+#spidey[data-pose="eat"] .legR .fore { transform: rotate(-14deg); }
+#spidey[data-pose="eat"] .head { animation: munch .28s ease-in-out 5; }
+@keyframes munch { 50% { transform: translateY(2.5px) rotate(4deg); } }
+
+#spidey .bug { opacity: 0; transform-box: view-box; }
+#spidey .bugbody { fill: #2fd07d; }
+#spidey .wing { stroke: rgba(255, 255, 255, .85); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: wingFlap .12s linear infinite alternate; }
+#spidey .bugthread { stroke: rgba(255, 255, 255, .5); stroke-width: 1; }
+@keyframes wingFlap { to { transform: scaleY(.35); } }
+#spidey.eating .bug { animation: bugSeq 2.3s ease-in-out forwards; }
+@keyframes bugSeq {
+  0%   { opacity: 0; transform: translate(26px, -70px); }
+  16%  { opacity: 1; transform: translate(26px, 24px); }
+  44%  { transform: translate(26px, 24px); }
+  60%  { transform: translate(44px, 26px); }
+  76%  { opacity: 1; transform: translate(52px, 30px); }
+  88%  { opacity: 0; transform: translate(56px, 32px) scale(.4); }
+  100% { opacity: 0; transform: translate(56px, 32px) scale(.4); }
+}
+
+/* ---- POSE: look (curious) ---- */
+#spidey[data-pose="look"] .armL { transform: rotate(-152deg); }
+#spidey[data-pose="look"] .armL .fore { transform: rotate(-6deg); }
+#spidey[data-pose="look"] .armR { transform: rotate(10deg); }
+#spidey[data-pose="look"] .armR .fore { transform: rotate(14deg); }
+#spidey[data-pose="look"] .legL { transform: rotate(8deg); }
+#spidey[data-pose="look"] .legL .fore { transform: rotate(12deg); }
+#spidey[data-pose="look"] .legR { transform: rotate(-6deg); }
+#spidey[data-pose="look"] .legR .fore { transform: rotate(-12deg); }
+#spidey[data-pose="look"] .head { animation: lookOnce 1.1s ease-in-out; }
+@keyframes lookOnce { 30% { transform: rotate(-14deg); } 70% { transform: rotate(10deg); } 100% { transform: rotate(0deg); } }
+
+/* ---- speech bubble ---- */
+#spidey .bubble {
+  position: absolute; left: -158px; top: -118px;
+  background: #fff; color: #141416;
+  font-family: var(--font-body); font-weight: 700; font-size: .88rem;
+  padding: 9px 15px; border-radius: 14px; border-bottom-right-radius: 3px;
+  opacity: 0; transform: scale(.6); transition: .3s var(--ease);
+  pointer-events: none; white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .45);
+}
+#spidey.talking .bubble { opacity: 1; transform: scale(1); }
+
+/* ---- rappel thread (path) ---- */
+#webLine path { stroke: rgba(255, 255, 255, .9); stroke-width: 2; fill: none; stroke-linecap: round; opacity: 0; transition: opacity .3s; }
+#webLine.on path { opacity: 1; }
+
+@media (max-width: 760px) {
+  #spidey .bubble { left: -146px; top: -104px; font-size: .8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #spidey .eye, #spidey .sway, #spidey .wing { animation: none; }
+}
