@@ -1233,3 +1233,47 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
 @media (prefers-reduced-motion: reduce) {
   #spidey .eye, #spidey .sway, #spidey .wing { animation: none; }
 }
+
+/* ============================================================
+   V10 — DE-PARALYZE SPIDEY: constant life, snappy reactions
+   ============================================================ */
+
+/* snappier limb transitions */
+#spidey .limb, #spidey .fore, #spidey .head { transition: transform .16s var(--ease); }
+
+/* organic irregular sway (replaces slow metronome) */
+#spidey[data-pose="hang"] .sway,
+#spidey[data-pose="wave"] .sway,
+#spidey[data-pose="flex"] .sway,
+#spidey[data-pose="eat"]  .sway,
+#spidey[data-pose="look"] .sway { animation: sway2 3.8s ease-in-out infinite; }
+@keyframes sway2 {
+  0%   { transform: rotate(-2.2deg); }
+  30%  { transform: rotate(1.6deg); }
+  55%  { transform: rotate(-1.2deg); }
+  80%  { transform: rotate(2.4deg); }
+  100% { transform: rotate(-2.2deg); }
+}
+
+/* breathing chest while hanging */
+#spidey[data-pose="hang"] .rig { animation: breathe 3.2s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.03, .98); } }
+/* flip must always win over breathe */
+#spidey.flipping .rig { animation: spideyFlip .7s var(--ease) !important; }
+
+/* legs never fully still */
+#spidey[data-pose="hang"] .legL .fore { animation: dangle2 3s ease-in-out infinite alternate; }
+#spidey[data-pose="hang"] .legR .fore { animation: dangle2 3.4s ease-in-out infinite alternate-reverse; }
+@keyframes dangle2 { from { transform: rotate(6deg); } to { transform: rotate(18deg); } }
+
+/* head micro-life */
+#spidey[data-pose="hang"] .head { animation: headIdle 7s ease-in-out infinite; }
+@keyframes headIdle {
+  0%, 40%, 100% { transform: rotate(0deg); }
+  45%, 55%      { transform: rotate(-8deg); }
+  62%, 72%      { transform: rotate(6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #spidey .sway, #spidey .rig, #spidey .legL .fore, #spidey .legR .fore, #spidey .head { animation: none !important; }
+}
