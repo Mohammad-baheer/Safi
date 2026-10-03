@@ -978,3 +978,112 @@ a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation
    flicker). Snap instead: the opaque overlay hides the snap.
    ============================================================ */
 .nav.menu-open { transition: none !important; }
+
+/* ============================================================
+   V8 — SPIDEY 🕷  (rigged mascot · web-swing transitions)
+   ============================================================ */
+
+#spidey { position: absolute; left: 0; top: 0; z-index: 1400; width: 0; height: 0; pointer-events: none; }
+#spidey svg {
+  position: absolute; left: -58px; top: -88px; width: 120px; height: 150px;
+  overflow: visible; pointer-events: auto; cursor: pointer;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .55));
+}
+#spidey line { stroke: #3a4db0; stroke-width: 7; stroke-linecap: round; }
+#spidey .torso { stroke: #e62429; stroke-width: 11; }
+#spidey .mask { fill: #e62429; }
+#spidey .eye { fill: #fff; }
+#spidey .webline { stroke: rgba(0, 0, 0, .38); stroke-width: 1; fill: none; }
+#spidey .limb, #spidey .fore, #spidey .head, #spidey .rig { transform-box: view-box; }
+#spidey .limb, #spidey .fore, #spidey .head { transition: transform .3s var(--ease); }
+#spidey .rig { transform-origin: 60px 75px; }
+
+/* ---- POSE: sit (perched on text, legs dangling) ---- */
+#spidey[data-pose="sit"] .legL { transform: rotate(-80deg); }
+#spidey[data-pose="sit"] .legL .fore { animation: dangle 2.6s ease-in-out infinite alternate; }
+#spidey[data-pose="sit"] .legR { transform: rotate(-70deg); }
+#spidey[data-pose="sit"] .legR .fore { transform: rotate(64deg); }
+#spidey[data-pose="sit"] .armR { transform: rotate(14deg); }
+#spidey[data-pose="sit"] .armR .fore { transform: rotate(34deg); }
+#spidey[data-pose="sit"] .armL { transform: rotate(-10deg); }
+#spidey[data-pose="sit"] .armL .fore { transform: rotate(24deg); }
+#spidey[data-pose="sit"] .head { animation: look 6s ease-in-out infinite; }
+@keyframes dangle { from { transform: rotate(58deg); } to { transform: rotate(80deg); } }
+@keyframes look { 0%, 42%, 100% { transform: rotate(0deg); } 50%, 70% { transform: rotate(-9deg); } }
+
+/* ---- POSE: walk (cycles limbs + bob) ---- */
+#spidey[data-pose="walk"] .armL { animation: swingA .45s ease-in-out infinite alternate; }
+#spidey[data-pose="walk"] .armR { animation: swingA .45s ease-in-out infinite alternate-reverse; }
+#spidey[data-pose="walk"] .legL { animation: swingL .45s ease-in-out infinite alternate; }
+#spidey[data-pose="walk"] .legR { animation: swingL .45s ease-in-out infinite alternate-reverse; }
+#spidey[data-pose="walk"] .fore { transform: rotate(14deg); }
+#spidey[data-pose="walk"] .rig { animation: bob .24s ease-in-out infinite alternate; }
+@keyframes swingA { from { transform: rotate(24deg); }  to { transform: rotate(-24deg); } }
+@keyframes swingL { from { transform: rotate(28deg); }  to { transform: rotate(-28deg); } }
+@keyframes bob    { from { transform: translateY(0); }  to { transform: translateY(-3px); } }
+
+/* ---- POSE: swing (one arm up on the web, legs tucked) ---- */
+#spidey[data-pose="swing"] svg { transform: rotate(7deg); }
+#spidey[data-pose="swing"] .armL { transform: rotate(-152deg); }
+#spidey[data-pose="swing"] .armL .fore { transform: rotate(-6deg); }
+#spidey[data-pose="swing"] .armR { transform: rotate(34deg); }
+#spidey[data-pose="swing"] .armR .fore { transform: rotate(46deg); }
+#spidey[data-pose="swing"] .legL { transform: rotate(30deg); }
+#spidey[data-pose="swing"] .legL .fore { transform: rotate(56deg); }
+#spidey[data-pose="swing"] .legR { transform: rotate(42deg); }
+#spidey[data-pose="swing"] .legR .fore { transform: rotate(72deg); }
+
+/* ---- POSE: leap (spread eagle) ---- */
+#spidey[data-pose="leap"] .armL { transform: rotate(-120deg); }
+#spidey[data-pose="leap"] .armL .fore { transform: rotate(-14deg); }
+#spidey[data-pose="leap"] .armR { transform: rotate(120deg); }
+#spidey[data-pose="leap"] .armR .fore { transform: rotate(14deg); }
+#spidey[data-pose="leap"] .legL { transform: rotate(-34deg); }
+#spidey[data-pose="leap"] .legL .fore { transform: rotate(40deg); }
+#spidey[data-pose="leap"] .legR { transform: rotate(30deg); }
+#spidey[data-pose="leap"] .legR .fore { transform: rotate(52deg); }
+
+/* ---- POSE: wave (sit + hello hand) ---- */
+#spidey[data-pose="wave"] .legL { transform: rotate(-80deg); }
+#spidey[data-pose="wave"] .legL .fore { transform: rotate(70deg); }
+#spidey[data-pose="wave"] .legR { transform: rotate(-70deg); }
+#spidey[data-pose="wave"] .legR .fore { transform: rotate(64deg); }
+#spidey[data-pose="wave"] .armL { transform: rotate(-148deg); }
+#spidey[data-pose="wave"] .armL .fore { animation: waveHand .4s ease-in-out infinite alternate; }
+#spidey[data-pose="wave"] .armR { transform: rotate(14deg); }
+#spidey[data-pose="wave"] .armR .fore { transform: rotate(34deg); }
+@keyframes waveHand { from { transform: rotate(-14deg); } to { transform: rotate(26deg); } }
+
+/* ---- flip easter egg ---- */
+#spidey.flipping .rig { animation: spideyFlip .7s var(--ease); }
+@keyframes spideyFlip { to { transform: rotate(-360deg); } }
+
+/* ---- web line ---- */
+#webLine { position: fixed; inset: 0; z-index: 1390; pointer-events: none; width: 100%; height: 100%; }
+#webLine line { stroke: rgba(255, 255, 255, .92); stroke-width: 2; stroke-linecap: round; opacity: 0; transition: opacity .15s; }
+#webLine.on line { opacity: 1; }
+
+/* ---- web splat wipe ---- */
+#webSplat { position: fixed; inset: 0; z-index: 1550; pointer-events: none; opacity: 0; }
+#webSplat .web {
+  position: absolute; inset: -20%;
+  background: #f2f2ef;
+  transform: scale(.04); transform-origin: 50% 45%;
+  transition: transform .3s cubic-bezier(.2, .8, .25, 1);
+}
+#webSplat .web svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#webSplat.in { opacity: 1; }
+#webSplat.in .web { transform: scale(1.8); }
+#webSplat.out { opacity: 0; transition: opacity .32s ease .04s; }
+#webSplat.out .web { transform: scale(2.5); transition: transform .38s cubic-bezier(.5, 0, .8, .4); }
+
+/* ---- mobile sizing ---- */
+@media (max-width: 760px) {
+  #spidey svg { width: 92px; height: 115px; left: -45px; top: -68px; }
+}
+
+/* ---- reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  #webSplat, #webLine { display: none; }
+  #spidey svg { transform: none !important; }
+}
