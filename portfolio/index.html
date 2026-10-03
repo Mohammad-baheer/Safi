@@ -32,12 +32,57 @@
 </head>
 <body>
 
-  <!-- ============ PRELOADER ============ -->
+  <!-- ============ PRELOADER: THE WEB-WEAVING BOOT SEQUENCE ============ -->
   <div id="preloader" aria-hidden="true">
-    <div class="pre-inner">
-      <span class="pre-logo">MBS</span>
+    <div class="pre-stage">
+      <!-- web weaves itself -->
+      <svg class="pre-web" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+        <g class="pw">
+          <line pathLength="1" x1="50" y1="50" x2="125" y2="50"  style="--d:.02s"/>
+          <line pathLength="1" x1="50" y1="50" x2="115" y2="82"  style="--d:.06s"/>
+          <line pathLength="1" x1="50" y1="50" x2="87"  y2="110" style="--d:.10s"/>
+          <line pathLength="1" x1="50" y1="50" x2="50"  y2="120" style="--d:.14s"/>
+          <line pathLength="1" x1="50" y1="50" x2="13"  y2="110" style="--d:.18s"/>
+          <line pathLength="1" x1="50" y1="50" x2="-15" y2="82"  style="--d:.22s"/>
+          <line pathLength="1" x1="50" y1="50" x2="-25" y2="50"  style="--d:.26s"/>
+          <line pathLength="1" x1="50" y1="50" x2="-15" y2="8"   style="--d:.30s"/>
+          <line pathLength="1" x1="50" y1="50" x2="13"  y2="-20" style="--d:.34s"/>
+          <line pathLength="1" x1="50" y1="50" x2="50"  y2="-30" style="--d:.38s"/>
+          <line pathLength="1" x1="50" y1="50" x2="87"  y2="-20" style="--d:.42s"/>
+          <line pathLength="1" x1="50" y1="50" x2="115" y2="8"   style="--d:.46s"/>
+          <circle pathLength="1" cx="50" cy="50" r="8"  style="--d:.50s"/>
+          <circle pathLength="1" cx="50" cy="50" r="16" style="--d:.58s"/>
+          <circle pathLength="1" cx="50" cy="50" r="26" style="--d:.66s"/>
+          <circle pathLength="1" cx="50" cy="50" r="38" style="--d:.74s"/>
+          <circle pathLength="1" cx="50" cy="50" r="52" style="--d:.82s"/>
+        </g>
+      </svg>
+
+      <!-- the spider drops in on his thread -->
+      <div class="pre-spider">
+        <i class="thread"></i>
+        <svg viewBox="0 0 60 60">
+          <g class="legs" fill="none" stroke="#3a4db0" stroke-width="3" stroke-linecap="round">
+            <path d="M24 34 Q12 30 8 20"/><path d="M24 38 Q10 40 6 34"/>
+            <path d="M24 42 Q12 48 8 54"/><path d="M26 45 Q18 54 16 58"/>
+            <path d="M36 34 Q48 30 52 20"/><path d="M36 38 Q50 40 54 34"/>
+            <path d="M36 42 Q48 48 52 54"/><path d="M34 45 Q42 54 44 58"/>
+          </g>
+          <circle cx="30" cy="26" r="7" fill="#e62429"/>
+          <circle cx="30" cy="38" r="10" fill="#e62429"/>
+          <circle cx="27" cy="24" r="1.6" fill="#fff"/><circle cx="33" cy="24" r="1.6" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- title card -->
+      <p class="pre-name">
+        <span><b style="--d:.10s">M</b><b style="--d:.13s">O</b><b style="--d:.16s">H</b><b style="--d:.19s">A</b><b style="--d:.22s">M</b><b style="--d:.25s">M</b><b style="--d:.28s">A</b><b style="--d:.31s">D</b></span>
+        <span><b style="--d:.37s">B</b><b style="--d:.40s">A</b><b style="--d:.43s">H</b><b style="--d:.46s">E</b><b style="--d:.49s">E</b><b style="--d:.52s">R</b></span>
+        <span><b style="--d:.58s">S</b><b style="--d:.61s">A</b><b style="--d:.64s">F</b><b style="--d:.67s">I</b></span>
+      </p>
+      <div class="pre-count">000</div>
       <div class="pre-bar"><i></i></div>
-      <span class="pre-count">000</span>
+      <p class="pre-log">weaving the web…</p>
     </div>
   </div>
 
