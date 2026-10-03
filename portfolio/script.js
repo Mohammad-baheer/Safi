@@ -231,7 +231,8 @@
   const spy = new IntersectionObserver(entries => {
     entries.forEach(en => {
       if (!en.isIntersecting) return;
-      $$('#navLinks a').forEach(a =>
+      curId = en.target.id;                       // Spidey remembers where he is
+      $('#navLinks a').forEach(a =>
         a.classList.toggle('active', a.getAttribute('href') === `#${en.target.id}`));
     });
   }, { rootMargin: '-40% 0px -55% 0px' });
@@ -295,50 +296,162 @@
   });
 
   /* ============================================================
-     12) V4 — TRICOLOR CURTAIN PAGE TRANSITIONS
+     12) V8 — SPIDEY ENGINE: perches · web-swing transitions · egg
      ============================================================ */
-  const curtain = $('#curtain');
+  const spidey  = $('#spidey');
+  const splat   = $('#webSplat');
+  const webLine = $('#webLine');
+  const webL    = $('#webLineL');
   let transitioning = false;
+  let spX = innerWidth / 2, spY = 300;
+  let curId = 'home';
+
+  const PERCH = {
+    home:    '.hero-title .line:nth-child(2)',
+    about:   '.monogram-card',
+    skills:  '#skills .section-title',
+    journey: '#journey .section-title',
+    contact: '.contact-title',
+  };
+
+  const setSp  = (x, y) => { spX = x; spY = y; spidey.style.transform = `translate3d(${x}px, ${y}px, 0)`; };
+  const pose   = (p) => { spidey.dataset.pose = p; };
+  const clampX = (x) => Math.max(70, Math.min(innerWidth - 70, x));
+
+  function perchFor(id) {
+    const el = $(PERCH[id] || PERCH.home);
+    if (!el) return { x: innerWidth / 2, y: scrollY + 240 };
+    const r  = el.getBoundingClientRect();
+    const fx = (id === 'about') ? 0.5 : 0.8;
+    return { x: clampX(r.left + r.width * fx), y: r.top + scrollY + 2 };
+  }
+
+  const easeIO = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  function tween(dur, step, done) {
+    const t0 = performance.now();
+    (function f(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      step(easeIO(p), p);
+      if (p < 1) requestAnimationFrame(f);
+      else if (done) done();
+    })(t0);
+  }
+
+  function lineTo(px, py) {   // web thread: pivot -> raised hand (viewport coords)
+    const handUp = innerWidth < 760 ? 52 : 68;
+    webL.setAttribute('x1', px);            webL.setAttribute('y1', py - scrollY);
+    webL.setAttribute('x2', spX - 8);       webL.setAttribute('y2', spY - handUp - scrollY);
+  }
+
+  function splatIn()  { splat.classList.remove('out'); splat.classList.add('in'); }
+  function splatOut() {
+    splat.classList.add('out');
+    setTimeout(() => splat.classList.remove('in', 'out'), 650);
+  }
+
+  function seatAt(id) { const p = perchFor(id); setSp(p.x, p.y); pose('sit'); }
+
+  function spideyNavigate(target, id) {
+    transitioning = true;
+    const watchdog = setTimeout(() => {          // can never get stuck
+      if (!transitioning) return;
+      webLine.classList.remove('on');
+      splat.classList.remove('in', 'out');
+      seatAt(id);
+      transitioning = false;
+    }, 3200);
+
+    pose('leap');
+    const y0 = spY;
+    tween(180, (e) => setSp(spX, y0 - 30 * e), () => {      // little jump
+      pose('swing');
+      const P   = { x: clampX(spX + innerWidth * .35), y: scrollY - 170 };
+      const L   = Math.hypot(spX - P.x, spY - P.y);
+      const th0 = Math.atan2(spX - P.x, spY - P.y);
+      const th1 = th0 + 1.35;
+      webLine.classList.add('on');
+      let fired = false;
+      tween(540, (e, p) => {                                 // pendulum arc
+        const th = th0 + (th1 - th0) * e;
+        setSp(P.x + L * Math.sin(th), P.y + L * Math.cos(th));
+        lineTo(P.x, P.y);
+        if (!fired && p > .6) { fired = true; splatIn(); }   // THWIP!
+      }, () => {
+        webLine.classList.remove('on');
+        const prev = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = 'auto';
+        target.scrollIntoView();
+        document.documentElement.style.scrollBehavior = prev;
+        try { history.pushState(null, '', `#${id}`); } catch (_) {}
+        splatOut();
+        pose('leap');
+        const perch = perchFor(id);
+        const sx = spX, sy = spY;
+        setTimeout(() => {
+          tween(430, (e) => {                                // land on new perch
+            setSp(sx + (perch.x - sx) * e, sy + (perch.y - sy) * e - Math.sin(e * Math.PI) * 80);
+          }, () => {
+            pose('sit');
+            transitioning = false;
+            clearTimeout(watchdog);
+          });
+        }, 120);
+      });
+    });
+  }
 
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href^="#"]');
-    if (!a || reduced || transitioning || !curtain) return;
-    const id = a.getAttribute('href');
-    const target = id.length > 1 ? document.querySelector(id) : null;
+    if (!a || reduced || transitioning || !spidey) return;
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
     if (!target) return;
-
     e.preventDefault();
     closeMenu();
-    transitioning = true;
-    curtain.classList.add('in');
-
-    /* failsafe watchdog: curtain can never stay stuck on screen */
-    setTimeout(() => {
-      if (!transitioning) return;
-      curtain.classList.add('noanim');
-      curtain.classList.remove('in', 'out');
-      void curtain.offsetWidth;
-      curtain.classList.remove('noanim');
-      transitioning = false;
-    }, 2600);
-
-    setTimeout(() => {
-      const prev = document.documentElement.style.scrollBehavior;
-      document.documentElement.style.scrollBehavior = 'auto';
-      target.scrollIntoView();
-      document.documentElement.style.scrollBehavior = prev;
-      try { history.pushState(null, '', id); } catch (_) {}
-      curtain.classList.add('out');
-      setTimeout(() => {
-        /* reset instantly & invisibly — panels must NOT sweep back */
-        curtain.classList.add('noanim');
-        curtain.classList.remove('in', 'out');
-        void curtain.offsetWidth;
-        curtain.classList.remove('noanim');
-        transitioning = false;
-      }, 1100);
-    }, 560);
+    spideyNavigate(target, id);
   });
+
+  if (spidey) {
+    /* entrance: walk in along the hero title, then sit on it */
+    setTimeout(() => {
+      const p = perchFor('home');
+      if (reduced) { setSp(p.x, p.y); pose('sit'); return; }
+      const sx = Math.max(40, p.x - 280);
+      setSp(sx, p.y);
+      pose('walk');
+      tween(1400, (e) => setSp(sx + (p.x - sx) * e, p.y), () => pose('sit'));
+    }, reduced ? 100 : 1500);
+
+    /* keep him perched when the viewport changes */
+    let rzT;
+    addEventListener('resize', () => {
+      clearTimeout(rzT);
+      rzT = setTimeout(() => { if (!transitioning) seatAt(curId); }, 250);
+    }, { passive: true });
+
+    /* easter egg: click Spidey → backflip + wave + web sparks */
+    spidey.addEventListener('click', () => {
+      if (spidey.classList.contains('flipping') || transitioning) return;
+      spidey.classList.add('flipping');
+      pose('wave');
+      const vx = spX, vy = spY - 50 - scrollY;
+      for (let k = 0; k < 14; k++) {
+        const s = document.createElement('span');
+        s.className = 'spark';
+        const ang = Math.random() * Math.PI * 2, dist = 30 + Math.random() * 70;
+        s.style.left = `${vx}px`; s.style.top = `${vy}px`;
+        s.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+        s.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+        s.style.setProperty('--c', '#ffffff');
+        document.body.append(s);
+        s.addEventListener('animationend', () => s.remove(), { once: true });
+      }
+      setTimeout(() => {
+        spidey.classList.remove('flipping');
+        if (!transitioning) pose('sit');
+      }, 1200);
+    });
+  }
 
   /* ============================================================
      13) V4 — SPARKS ON EVERY CLICK + RIPPLES ON TOUCHABLES
