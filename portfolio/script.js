@@ -295,24 +295,47 @@
   });
 
   /* ============================================================
-     12) V9 — SPIDEY: LIVING SCROLL-COMPANION
-     Rappels with your scroll on his web thread, auto-scrolls at
-     his own speed on nav clicks, blinks, sways, and lives idle:
-     waves hi, flexes, catches & eats a fly, looks around.
+     12) V11 — SPIDEY: PROCEDURAL LIVING RIG (physics per frame)
+     Pendulum sway · scroll-driven walk cycle · saccades · blinks
+     breathing · momentum thread. All inline transforms in JS —
+     immune to stale CSS. Never frozen, ever.
      ============================================================ */
   const spidey  = $('#spidey');
   const webLine = $('#webLine');
   const webP    = $('#webLineL');
-  let transitioning = false;          // freezes particles during auto-scroll
+  let transitioning = false;
   let autoScroll = null;
-  let curPose = 'hang';
   let entered = false;
-  let sVel = 0, off = 0, rot = 0;
+  let sVel = 0, off = 0, rot = 0, pendingDelta = 0;
   let lastYv = scrollY, lastT = performance.now();
   let idleSince = 0, nextAct = 0;
   let baseX = 0, baseY = 0;
+  let mode = 'hang', modeUntil = 0, phase = 0;
+  let th = 0, thV = 0, thRest = 0, nextRest = 0;
+  let look = 0, lookT = 0, nextLook = 0;
+  let blinkAt = 2200, blinkT0 = -1e9;
 
-  const pose = (p) => { curPose = p; spidey.dataset.pose = p; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const n2 = (t, s) => Math.sin(t * s) * .6 + Math.sin(t * s * 1.7 + 1.3) * .4;
+  const easeIO = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
+  /* rig references + self-sufficient transform setup */
+  const R = {};
+  if (spidey) {
+    R.sway = $('.sway', spidey); R.rig = $('.rig', spidey); R.head = $('.head', spidey);
+    R.armL = $('.armL', spidey); R.armLf = $('.armL .fore', spidey);
+    R.armR = $('.armR', spidey); R.armRf = $('.armR .fore', spidey);
+    R.legL = $('.legL', spidey); R.legLf = $('.legL .fore', spidey);
+    R.legR = $('.legR', spidey); R.legRf = $('.legR .fore', spidey);
+    R.svg  = $('svg', spidey);
+    R.eyes = $$('.eye', spidey);
+    R.sway.style.transformBox = 'view-box';
+    R.sway.style.transformOrigin = '60px -50px';
+    R.rig.style.transformBox = 'view-box';
+    R.rig.style.transformOrigin = '60px 75px';
+    R.eyes.forEach(e => { e.style.transformBox = 'fill-box'; e.style.transformOrigin = 'center'; });
+  }
+
   const handUp = () => innerWidth < 760 ? 52 : 68;
   const computeBase = () => {
     baseX = innerWidth - (innerWidth < 760 ? 62 : 108);
@@ -321,140 +344,183 @@
   computeBase();
   addEventListener('resize', () => {
     computeBase();
-    if (reduced && entered) {
-      spidey.style.transform = `translate3d(${baseX}px, ${baseY}px, 0)`;
-      webP.setAttribute('d', `M ${baseX - 2} -6 Q ${baseX - 2} ${baseY / 2}, ${baseX - 6} ${baseY - handUp() + 6}`);
-    }
+    if (reduced && entered) placeStatic();
   }, { passive: true });
 
-  /* scroll-velocity sampler */
+  /* scroll-velocity + delta sampler */
   addEventListener('scroll', () => {
     const now = performance.now();
     const y = scrollY;
     const dt = Math.max(now - lastT, 1);
-    sVel += ((y - lastYv) / dt - sVel) * 0.25;
+    sVel += ((y - lastYv) / dt - sVel) * 0.3;
+    pendingDelta += y - lastYv;
     lastYv = y; lastT = now;
   }, { passive: true });
 
-  const easeIO = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-
-  /* ---- auto-scroll at Spidey's speed ---- */
+  /* ---- auto-scroll: INSTANT (<=600ms), no CSS-smooth hijack ---- */
   function scrollToTarget(el) {
     const startY = scrollY;
-    const targetY = el.getBoundingClientRect().top + startY - 84;
-    const dist = targetY - startY;
+    const dist = el.getBoundingClientRect().top + startY - 84 - startY;
     if (Math.abs(dist) < 10) return;
     autoScroll = {
       t0: performance.now(), startY, dist,
-      dur: Math.min(1000, Math.max(380, Math.abs(dist) / 4)),
+      dur: Math.min(600, Math.max(280, Math.abs(dist) / 6)),
       dir: Math.sign(dist),
     };
     transitioning = true;
-    pose(autoScroll.dir > 0 ? 'rappel' : 'climb');
+    mode = autoScroll.dir > 0 ? 'rappel' : 'climb';
     (function step(t) {
       if (!autoScroll) { transitioning = false; return; }
       const p = Math.min((t - autoScroll.t0) / autoScroll.dur, 1);
-      window.scrollTo(0, autoScroll.startY + autoScroll.dist * easeIO(p));
+      window.scrollTo({ top: autoScroll.startY + autoScroll.dist * easeIO(p), behavior: 'instant' });
       if (p < 1) requestAnimationFrame(step);
       else {
         autoScroll = null; transitioning = false;
-        pose('hang');
+        mode = 'hang';
         idleSince = performance.now();
-        nextAct = idleSince + 1200 + Math.random() * 2000;
+        nextAct = idleSince + 1200 + Math.random() * 1800;
       }
     })(performance.now());
   }
-  /* the moment the user grabs the scroll, Spidey hands it over */
   ['wheel', 'touchstart'].forEach(ev =>
     addEventListener(ev, () => { if (autoScroll) { autoScroll = null; transitioning = false; } }, { passive: true }));
 
-  /* ---- idle life ---- */
-  function idleAction() {
-    const acts = ['wave', 'flex', 'eat', 'look'];
-    const a = acts[(Math.random() * acts.length) | 0];
-    const still = () => !autoScroll && Math.abs(sVel) < 0.35;
-    if (a === 'eat') {
-      pose('eat'); spidey.classList.add('eating');
-      setTimeout(() => { spidey.classList.remove('eating'); if (still()) pose('hang'); }, 2400);
-    } else {
-      pose(a);
-      setTimeout(() => { if (still()) pose('hang'); }, a === 'flex' ? 1500 : a === 'wave' ? 1400 : 1200);
+  /* ---- idle life scheduler ---- */
+  function idleAction(t) {
+    const acts = ['wave', 'flex', 'eat', 'look', 'wave', 'flex'];
+    mode = acts[(Math.random() * acts.length) | 0];
+    modeUntil = t + (mode === 'eat' ? 2400 : mode === 'flex' ? 1600 : mode === 'wave' ? 1500 : 1200);
+    nextAct = t + 2000 + Math.random() * 3000;
+    if (mode === 'eat') {
+      spidey.classList.add('eating');
+      setTimeout(() => spidey.classList.remove('eating'), 2400);
     }
-    nextAct = performance.now() + 2200 + Math.random() * 3000;
   }
 
-  /* ---- render loop: spring lag, thread physics, pose machine ---- */
-  function spideyLoop() {
+  function placeStatic() {
+    spidey.style.transform = `translate3d(${baseX}px, ${baseY}px, 0)`;
+    webP.setAttribute('d', `M ${baseX - 2} -6 Q ${baseX - 2} ${baseY / 2}, ${baseX - 6} ${baseY - handUp() + 6}`);
+  }
+
+  /* ---- THE LIVING RIG: every joint, every frame ---- */
+  function spideyLoop(now) {
+    const t = now, dt = 1 / 60;
     if (!entered) {
       spidey.style.transform = `translate3d(${baseX}px, -260px, 0)`;
       requestAnimationFrame(spideyLoop);
       return;
     }
-    const t = performance.now();
-    const targetOff = Math.max(-130, Math.min(130, -sVel * 70));
-    off += (targetOff - off) * 0.26;
-    const targetRot = Math.max(-16, Math.min(16, sVel * 9));
-    rot += (targetRot - rot) * 0.2;
-    sVel *= 0.9;
 
-    /* never frozen: layered sine micro-jitter = alive */
-    const jx = Math.sin(t / 610) * 1.6 + Math.sin(t / 247) * 0.8;
-    const jy = Math.sin(t / 530) * 2.2 + Math.sin(t / 313) * 1.0;
-    const jr = Math.sin(t / 700) * 1.6;
+    /* position spring + organic micro-jitter */
+    off += (clamp(-sVel * 70, -130, 130) - off) * 0.26;
+    rot += (clamp(sVel * 9, -16, 16) - rot) * 0.2;
+    sVel *= 0.9;
+    const jx = n2(t / 1000, 1.0) * 2.2, jy = n2(t / 1000, 1.4) * 2.6, jr = n2(t / 1000, 0.8) * 1.6;
     const x = baseX + jx, y = baseY + off + jy;
     spidey.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot + jr}deg)`;
 
+    /* thread: momentum sag + sway coupling */
+    phase += pendingDelta * 0.05; pendingDelta = 0;
     const hx = x - 6, hy = y - handUp() + 6;
-    const sag = Math.max(-70, Math.min(70, sVel * 40)) + Math.sin(t / 500) * 5;
+    const sag = clamp(sVel * 40, -70, 70) + th * 60 + n2(t / 1000, 0.6) * 4;
     webP.setAttribute('d', `M ${hx + 4} -6 Q ${hx + 4 + sag} ${hy / 2}, ${hx} ${hy}`);
 
+    /* mode machine */
     if (!autoScroll) {
       if (Math.abs(sVel) > 0.35) {
-        const p = sVel > 0 ? 'rappel' : 'climb';
-        if (curPose !== p) pose(p);
-      } else if (curPose === 'rappel' || curPose === 'climb') {
-        pose('hang');
-        idleSince = performance.now();
-        nextAct = idleSince + 1600 + Math.random() * 2600;
-      } else if (curPose === 'hang' && idleSince && performance.now() > nextAct && !reduced) {
-        idleAction();
+        mode = sVel > 0 ? 'rappel' : 'climb';
+      } else if (mode === 'rappel' || mode === 'climb') {
+        mode = 'hang';
+        idleSince = t; nextAct = t + 1400 + Math.random() * 2200;
+      } else if (mode !== 'hang' && t > modeUntil) {
+        mode = 'hang';
+      } else if (mode === 'hang' && idleSince && t > nextAct && !reduced) {
+        idleAction(t);
       }
     }
+
+    /* pendulum physics for body sway */
+    if (t > nextRest) { thRest = (Math.random() - .5) * .10; nextRest = t + 1500 + Math.random() * 2500; }
+    thV += (-6 * (th - thRest) - 2.2 * thV) * dt;
+    th  += thV * dt;
+    const swayDeg = th * 57.3;
+    const lag = clamp(-thV * 40, -18, 18);
+
+    /* limbs */
+    let aL, aLf, aR, aRf, lL, lLf, lR, lRf;
+    const moving = (mode === 'rappel' || mode === 'climb');
+    if (moving) {
+      /* legs STEP at your scroll speed — he truly comes with you */
+      lL = 24 + Math.sin(phase) * 26;           lLf = 34 + Math.cos(phase) * 22;
+      lR = 24 + Math.sin(phase + Math.PI) * 26; lRf = 34 + Math.cos(phase + Math.PI) * 22;
+      aR = 46 + Math.sin(phase + Math.PI) * 12; aRf = 52 + Math.cos(phase) * 10;
+    } else {
+      lL = 8 + n2(t / 1000, .9) * 3 + lag * .5;  lLf = 12 + n2(t / 1000, .7) * 4 + lag;
+      lR = -6 + n2(t / 1000, .8) * 3 + lag * .5; lRf = -12 + n2(t / 1000, .6) * 4 + lag;
+      aR = 10 + n2(t / 1000, .8) * 3;            aRf = 14 + n2(t / 1000, .7) * 3;
+    }
+    aL = -152 + n2(t / 1000, 1.1) * 1.5; aLf = -6 + n2(t / 1000, .9) * 2;
+    if (mode === 'wave')  { aL = -140 + Math.sin(t * .02) * 6;   aLf = 8 + Math.sin(t * .025) * 26; }
+    if (mode === 'flex')  { const pu = Math.max(0, Math.sin(t * .012));
+                            aL = -64 - pu * 10; aLf = -108 - pu * 14;
+                            aR = 64 + pu * 10;  aRf = 108 + pu * 14; }
+    if (mode === 'eat')   { aL = -96; aLf = -42 + Math.sin(t * .02) * 6; }
+    if (mode === 'climb') { aR = -140 + Math.sin(phase) * 18; aRf = -10 + Math.cos(phase) * 10; }
+
+    /* head: counter-stabilize + saccades + chew */
+    if (t > nextLook) { lookT = (Math.random() - .5) * 22; nextLook = t + 1200 + Math.random() * 2600; }
+    look += (lookT - look) * Math.min(dt * 8, 1);
+    const headA = -swayDeg * .6 + look + (mode === 'eat' ? Math.sin(t * .02) * 4 : 0);
+
+    /* apply the rig */
+    R.sway.style.transform = `rotate(${swayDeg}deg)`;
+    const br = 1 + Math.sin(t / 480) * .012;
+    R.rig.style.transform = `scale(${br}, ${2 - br})`;
+    R.head.style.transform = `rotate(${headA}deg)`;
+    R.armL.style.transform = `rotate(${aL}deg)`;  R.armLf.style.transform = `rotate(${aLf}deg)`;
+    R.armR.style.transform = `rotate(${aR}deg)`;  R.armRf.style.transform = `rotate(${aRf}deg)`;
+    R.legL.style.transform = `rotate(${lL}deg)`;  R.legLf.style.transform = `rotate(${lLf}deg)`;
+    R.legR.style.transform = `rotate(${lR}deg)`;  R.legRf.style.transform = `rotate(${lRf}deg)`;
+    R.svg.style.transform = `rotate(${clamp(sVel * 6, -10, 10) + (mode === 'rappel' ? 4 : mode === 'climb' ? -4 : 0)}deg)`;
+
+    /* blinking (JS-driven, always alive) */
+    if (t > blinkAt) { blinkT0 = t; blinkAt = t + 2600 + Math.random() * 2600; }
+    const eyeS = (t - blinkT0 < 120) ? .12 : 1;
+    R.eyes.forEach(e => { e.style.transform = `scaleY(${eyeS})`; });
+
     requestAnimationFrame(spideyLoop);
   }
 
-  /* ---- entrance: drop in on the thread, then wave hi ---- */
+  /* ---- entrance: drop in rappelling, then wave hi (physical) ---- */
   function spideyEnter() {
     entered = true;
     webLine.classList.add('on');
-    if (reduced) { pose('hang'); return; }
+    if (reduced) { mode = 'hang'; placeStatic(); return; }
     off = -innerHeight * 0.9;
-    pose('rappel');
+    mode = 'rappel';
     setTimeout(() => {
       if (autoScroll || Math.abs(sVel) > 0.35) return;
-      pose('wave');
+      mode = 'wave'; modeUntil = performance.now() + 1600;
       setTimeout(() => {
         if (autoScroll || Math.abs(sVel) > 0.35) return;
-        pose('hang');
+        mode = 'hang';
         idleSince = performance.now();
-        nextAct = idleSince + 2000;
-      }, 1500);
-    }, 800);
+        nextAct = idleSince + 1800;
+      }, 1700);
+    }, 700);
   }
 
   if (spidey) {
     if (reduced) {
       entered = true;
       webLine.classList.add('on');
-      pose('hang');
-      spidey.style.transform = `translate3d(${baseX}px, ${baseY}px, 0)`;
-      webP.setAttribute('d', `M ${baseX - 2} -6 Q ${baseX - 2} ${baseY / 2}, ${baseX - 6} ${baseY - handUp() + 6}`);
+      placeStatic();
     } else {
       requestAnimationFrame(spideyLoop);
-      setTimeout(spideyEnter, 1400);
+      setTimeout(spideyEnter, 1200);
     }
 
-    /* easter egg: click him */
+    /* easter egg: click him → backflip + web sparks */
     spidey.addEventListener('click', () => {
       if (spidey.classList.contains('flipping')) return;
       spidey.classList.add('flipping');
@@ -473,7 +539,7 @@
     });
   }
 
-  /* ---- nav clicks = rappel auto-scroll at Spidey's speed ---- */
+  /* ---- nav clicks = instant rappel auto-scroll ---- */
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href^="#"]');
     if (!a || reduced) return;
