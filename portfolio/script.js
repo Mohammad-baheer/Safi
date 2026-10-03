@@ -231,7 +231,6 @@
   const spy = new IntersectionObserver(entries => {
     entries.forEach(en => {
       if (!en.isIntersecting) return;
-      curId = en.target.id;                       // Spidey remembers where he is
       $('#navLinks a').forEach(a =>
         a.classList.toggle('active', a.getAttribute('href') === `#${en.target.id}`));
     });
@@ -296,162 +295,202 @@
   });
 
   /* ============================================================
-     12) V8 — SPIDEY ENGINE: perches · web-swing transitions · egg
+     12) V9 — SPIDEY: LIVING SCROLL-COMPANION
+     Rappels with your scroll on his web thread, auto-scrolls at
+     his own speed on nav clicks, blinks, sways, and lives idle:
+     waves hi, flexes, catches & eats a fly, looks around.
      ============================================================ */
   const spidey  = $('#spidey');
-  const splat   = $('#webSplat');
   const webLine = $('#webLine');
-  const webL    = $('#webLineL');
-  let transitioning = false;
-  let spX = innerWidth / 2, spY = 300;
-  let curId = 'home';
+  const webP    = $('#webLineL');
+  const bubble  = $('#spideyBubble');
+  let transitioning = false;          // freezes particles during auto-scroll
+  let autoScroll = null;
+  let curPose = 'hang';
+  let entered = false;
+  let sVel = 0, off = 0, rot = 0;
+  let lastYv = scrollY, lastT = performance.now();
+  let idleSince = 0, nextAct = 0;
+  let baseX = 0, baseY = 0;
 
-  const PERCH = {
-    home:    '.hero-title .line:nth-child(2)',
-    about:   '.monogram-card',
-    skills:  '#skills .section-title',
-    journey: '#journey .section-title',
-    contact: '.contact-title',
+  const pose = (p) => { curPose = p; spidey.dataset.pose = p; };
+  const handUp = () => innerWidth < 760 ? 52 : 68;
+  const computeBase = () => {
+    baseX = innerWidth - (innerWidth < 760 ? 62 : 108);
+    baseY = innerHeight * 0.40;
   };
+  computeBase();
+  addEventListener('resize', () => {
+    computeBase();
+    if (reduced && entered) {
+      spidey.style.transform = `translate3d(${baseX}px, ${baseY}px, 0)`;
+      webP.setAttribute('d', `M ${baseX - 2} -6 Q ${baseX - 2} ${baseY / 2}, ${baseX - 6} ${baseY - handUp() + 6}`);
+    }
+  }, { passive: true });
 
-  const setSp  = (x, y) => { spX = x; spY = y; spidey.style.transform = `translate3d(${x}px, ${y}px, 0)`; };
-  const pose   = (p) => { spidey.dataset.pose = p; };
-  const clampX = (x) => Math.max(70, Math.min(innerWidth - 70, x));
-
-  function perchFor(id) {
-    const el = $(PERCH[id] || PERCH.home);
-    if (!el) return { x: innerWidth / 2, y: scrollY + 240 };
-    const r  = el.getBoundingClientRect();
-    const fx = (id === 'about') ? 0.5 : 0.8;
-    return { x: clampX(r.left + r.width * fx), y: r.top + scrollY + 2 };
-  }
+  /* scroll-velocity sampler */
+  addEventListener('scroll', () => {
+    const now = performance.now();
+    const y = scrollY;
+    const dt = Math.max(now - lastT, 1);
+    sVel += ((y - lastYv) / dt - sVel) * 0.25;
+    lastYv = y; lastT = now;
+  }, { passive: true });
 
   const easeIO = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-  function tween(dur, step, done) {
-    const t0 = performance.now();
-    (function f(t) {
-      const p = Math.min((t - t0) / dur, 1);
-      step(easeIO(p), p);
-      if (p < 1) requestAnimationFrame(f);
-      else if (done) done();
-    })(t0);
-  }
 
-  function lineTo(px, py) {   // web thread: pivot -> raised hand (viewport coords)
-    const handUp = innerWidth < 760 ? 52 : 68;
-    webL.setAttribute('x1', px);            webL.setAttribute('y1', py - scrollY);
-    webL.setAttribute('x2', spX - 8);       webL.setAttribute('y2', spY - handUp - scrollY);
-  }
-
-  function splatIn()  { splat.classList.remove('out'); splat.classList.add('in'); }
-  function splatOut() {
-    splat.classList.add('out');
-    setTimeout(() => splat.classList.remove('in', 'out'), 650);
-  }
-
-  function seatAt(id) { const p = perchFor(id); setSp(p.x, p.y); pose('sit'); }
-
-  function spideyNavigate(target, id) {
+  /* ---- auto-scroll at Spidey's speed ---- */
+  function scrollToTarget(el) {
+    const startY = scrollY;
+    const targetY = el.getBoundingClientRect().top + startY - 84;
+    const dist = targetY - startY;
+    if (Math.abs(dist) < 10) return;
+    autoScroll = {
+      t0: performance.now(), startY, dist,
+      dur: Math.min(2600, Math.max(700, Math.abs(dist) / 1.5)),
+      dir: Math.sign(dist),
+    };
     transitioning = true;
-    const watchdog = setTimeout(() => {          // can never get stuck
-      if (!transitioning) return;
-      webLine.classList.remove('on');
-      splat.classList.remove('in', 'out');
-      seatAt(id);
-      transitioning = false;
-    }, 3200);
+    pose(autoScroll.dir > 0 ? 'rappel' : 'climb');
+    (function step(t) {
+      if (!autoScroll) { transitioning = false; return; }
+      const p = Math.min((t - autoScroll.t0) / autoScroll.dur, 1);
+      window.scrollTo(0, autoScroll.startY + autoScroll.dist * easeIO(p));
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        autoScroll = null; transitioning = false;
+        pose('hang');
+        idleSince = performance.now();
+        nextAct = idleSince + 1800 + Math.random() * 2500;
+      }
+    })(performance.now());
+  }
+  /* the moment the user grabs the scroll, Spidey hands it over */
+  ['wheel', 'touchstart'].forEach(ev =>
+    addEventListener(ev, () => { if (autoScroll) { autoScroll = null; transitioning = false; } }, { passive: true }));
 
-    pose('leap');
-    const y0 = spY;
-    tween(180, (e) => setSp(spX, y0 - 30 * e), () => {      // little jump
-      pose('swing');
-      const P   = { x: clampX(spX + innerWidth * .35), y: scrollY - 170 };
-      const L   = Math.hypot(spX - P.x, spY - P.y);
-      const th0 = Math.atan2(spX - P.x, spY - P.y);
-      const th1 = th0 + 1.35;
-      webLine.classList.add('on');
-      let fired = false;
-      tween(540, (e, p) => {                                 // pendulum arc
-        const th = th0 + (th1 - th0) * e;
-        setSp(P.x + L * Math.sin(th), P.y + L * Math.cos(th));
-        lineTo(P.x, P.y);
-        if (!fired && p > .6) { fired = true; splatIn(); }   // THWIP!
-      }, () => {
-        webLine.classList.remove('on');
-        const prev = document.documentElement.style.scrollBehavior;
-        document.documentElement.style.scrollBehavior = 'auto';
-        target.scrollIntoView();
-        document.documentElement.style.scrollBehavior = prev;
-        try { history.pushState(null, '', `#${id}`); } catch (_) {}
-        splatOut();
-        pose('leap');
-        const perch = perchFor(id);
-        const sx = spX, sy = spY;
-        setTimeout(() => {
-          tween(430, (e) => {                                // land on new perch
-            setSp(sx + (perch.x - sx) * e, sy + (perch.y - sy) * e - Math.sin(e * Math.PI) * 80);
-          }, () => {
-            pose('sit');
-            transitioning = false;
-            clearTimeout(watchdog);
-          });
-        }, 120);
-      });
-    });
+  /* ---- idle life ---- */
+  function say(txt, ms = 1500) {
+    if (!bubble) return;
+    bubble.textContent = txt;
+    spidey.classList.add('talking');
+    setTimeout(() => spidey.classList.remove('talking'), ms);
+  }
+  function idleAction() {
+    const acts = ['wave', 'flex', 'eat', 'look'];
+    const a = acts[(Math.random() * acts.length) | 0];
+    const still = () => !autoScroll && Math.abs(sVel) < 0.6;
+    if (a === 'eat') {
+      pose('eat'); spidey.classList.add('eating');
+      setTimeout(() => { spidey.classList.remove('eating'); if (still()) pose('hang'); }, 2400);
+    } else {
+      pose(a);
+      if (a === 'wave' && Math.random() < .5) say('hey! 🕷️', 1200);
+      setTimeout(() => { if (still()) pose('hang'); }, a === 'flex' ? 1500 : a === 'wave' ? 1400 : 1200);
+    }
+    nextAct = performance.now() + 3200 + Math.random() * 4800;
   }
 
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="#"]');
-    if (!a || reduced || transitioning || !spidey) return;
-    const id = a.getAttribute('href').slice(1);
-    const target = document.getElementById(id);
-    if (!target) return;
-    e.preventDefault();
-    closeMenu();
-    spideyNavigate(target, id);
-  });
+  /* ---- render loop: spring lag, thread physics, pose machine ---- */
+  function spideyLoop() {
+    if (!entered) {
+      spidey.style.transform = `translate3d(${baseX}px, -260px, 0)`;
+      requestAnimationFrame(spideyLoop);
+      return;
+    }
+    const targetOff = Math.max(-110, Math.min(110, -sVel * 55));
+    off += (targetOff - off) * 0.14;
+    const targetRot = Math.max(-14, Math.min(14, sVel * 7));
+    rot += (targetRot - rot) * 0.12;
+    sVel *= 0.9;
+
+    const x = baseX, y = baseY + off;
+    spidey.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg)`;
+
+    const hx = x - 6, hy = y - handUp() + 6;
+    const sag = Math.max(-70, Math.min(70, sVel * 40)) + Math.sin(performance.now() / 900) * 4;
+    webP.setAttribute('d', `M ${hx + 4} -6 Q ${hx + 4 + sag} ${hy / 2}, ${hx} ${hy}`);
+
+    if (!autoScroll) {
+      if (Math.abs(sVel) > 0.6) {
+        const p = sVel > 0 ? 'rappel' : 'climb';
+        if (curPose !== p) pose(p);
+      } else if (curPose === 'rappel' || curPose === 'climb') {
+        pose('hang');
+        idleSince = performance.now();
+        nextAct = idleSince + 2200 + Math.random() * 3800;
+      } else if (curPose === 'hang' && idleSince && performance.now() > nextAct && !reduced) {
+        idleAction();
+      }
+    }
+    requestAnimationFrame(spideyLoop);
+  }
+
+  /* ---- entrance: drop in on the thread, then wave hi ---- */
+  function spideyEnter() {
+    entered = true;
+    webLine.classList.add('on');
+    if (reduced) { pose('hang'); return; }
+    off = -innerHeight * 0.9;
+    pose('rappel');
+    setTimeout(() => {
+      if (autoScroll || Math.abs(sVel) > 0.6) return;
+      pose('wave');
+      say('hi! 👋', 1700);
+      setTimeout(() => {
+        if (autoScroll || Math.abs(sVel) > 0.6) return;
+        pose('hang');
+        idleSince = performance.now();
+        nextAct = idleSince + 2600;
+      }, 1800);
+    }, 1000);
+  }
 
   if (spidey) {
-    /* entrance: walk in along the hero title, then sit on it */
-    setTimeout(() => {
-      const p = perchFor('home');
-      if (reduced) { setSp(p.x, p.y); pose('sit'); return; }
-      const sx = Math.max(40, p.x - 280);
-      setSp(sx, p.y);
-      pose('walk');
-      tween(1400, (e) => setSp(sx + (p.x - sx) * e, p.y), () => pose('sit'));
-    }, reduced ? 100 : 1500);
+    if (reduced) {
+      entered = true;
+      webLine.classList.add('on');
+      pose('hang');
+      spidey.style.transform = `translate3d(${baseX}px, ${baseY}px, 0)`;
+      webP.setAttribute('d', `M ${baseX - 2} -6 Q ${baseX - 2} ${baseY / 2}, ${baseX - 6} ${baseY - handUp() + 6}`);
+    } else {
+      requestAnimationFrame(spideyLoop);
+      setTimeout(spideyEnter, 1400);
+    }
 
-    /* keep him perched when the viewport changes */
-    let rzT;
-    addEventListener('resize', () => {
-      clearTimeout(rzT);
-      rzT = setTimeout(() => { if (!transitioning) seatAt(curId); }, 250);
-    }, { passive: true });
-
-    /* easter egg: click Spidey → backflip + wave + web sparks */
+    /* easter egg: click him */
     spidey.addEventListener('click', () => {
-      if (spidey.classList.contains('flipping') || transitioning) return;
+      if (spidey.classList.contains('flipping')) return;
       spidey.classList.add('flipping');
-      pose('wave');
-      const vx = spX, vy = spY - 50 - scrollY;
+      const lines = ['my web! 💪', 'thwip! 🕸️', 'watch the scroll! ⬇️'];
+      say(lines[(Math.random() * lines.length) | 0], 1300);
       for (let k = 0; k < 14; k++) {
         const s = document.createElement('span');
         s.className = 'spark';
         const ang = Math.random() * Math.PI * 2, dist = 30 + Math.random() * 70;
-        s.style.left = `${vx}px`; s.style.top = `${vy}px`;
+        s.style.left = `${baseX}px`; s.style.top = `${baseY - 50}px`;
         s.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
         s.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
         s.style.setProperty('--c', '#ffffff');
         document.body.append(s);
         s.addEventListener('animationend', () => s.remove(), { once: true });
       }
-      setTimeout(() => {
-        spidey.classList.remove('flipping');
-        if (!transitioning) pose('sit');
-      }, 1200);
+      setTimeout(() => spidey.classList.remove('flipping'), 900);
     });
   }
+
+  /* ---- nav clicks = rappel auto-scroll at Spidey's speed ---- */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a || reduced) return;
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    closeMenu();
+    try { history.pushState(null, '', `#${id}`); } catch (_) {}
+    scrollToTarget(target);
+  });
 
   /* ============================================================
      13) V4 — SPARKS ON EVERY CLICK + RIPPLES ON TOUCHABLES
