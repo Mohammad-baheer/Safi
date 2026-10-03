@@ -33,16 +33,25 @@
     releaseHero();
   } else {
     const T0 = performance.now();
-    const DUR = 1200;
+    const DUR = 1600;
+    const logEl = $('.pre-log');
+    const logs = ['weaving the web…', 'injecting tricolor…', 'loading certifications…', 'waking spidey…'];
+    let li = 0;
+    const logInt = setInterval(() => {
+      li = (li + 1) % logs.length;
+      if (logEl) logEl.textContent = logs[li];
+    }, 430);
     const count = (t) => {
       const p = Math.min((t - T0) / DUR, 1);
-      preCount.textContent = String(Math.floor(p * 100)).padStart(3, '0');
-      preBar.style.transform = `scaleX(${p})`;
+      const pe = 1 - Math.pow(1 - p, 2);
+      preCount.textContent = String(Math.floor(pe * 100)).padStart(3, '0');
+      preBar.style.transform = `scaleX(${pe})`;
       if (p < 1) { requestAnimationFrame(count); return; }
+      clearInterval(logInt);
       setTimeout(() => {
-        pre.classList.add('done');
+        pre.classList.add('done');   // the web gets YANKED away
         releaseHero();
-        setTimeout(() => pre.remove(), 1200);
+        setTimeout(() => pre.remove(), 1300);
       }, 220);
     };
     requestAnimationFrame(count);
